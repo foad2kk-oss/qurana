@@ -241,51 +241,55 @@ export function analyzeTajweedCorrections(ayahWords, transcribedText) {
   };
 }
 
-// Generate realistic mock correction feedback for demonstration & offline practice
-export function getMockCorrection(ayahText, index = 0) {
-  const originalWords = ayahText.split(/\s+/);
-  
-  // Create different mock error profiles based on index
+// Generate realistic mock correction — accepts words array with rule info
+export function getMockCorrection(ayahWordsOrText, index = 0) {
+  // Accept either words array or plain text
+  const originalWords = Array.isArray(ayahWordsOrText)
+    ? ayahWordsOrText
+    : ayahWordsOrText.split(/\s+/).map(w => ({ text: w, rule: 'none' }));
+
   if (index % 3 === 0) {
-    // Perfect score
     return {
-      score: 100,
-      words: originalWords.map(w => ({ text: w, status: 'correct', rule: 'none' })),
-      feedback: 'تلاوة ممتازة ما شاء الله! لقد قرأت الآية بشكل صحيح وتطبيق رائع للتحسين.'
+      score: 97,
+      words: originalWords.map(w => ({ text: w.text ?? w, status: 'correct', rule: w.rule ?? 'none' })),
+      feedback: 'تلاوة ممتازة ما شاء الله! أحكام التجويد مُطبَّقة بشكل صحيح.',
+      tajweedErrors: [],
     };
   } else if (index % 3 === 1) {
-    // Missing last word, and a harakat warning
     const wordsResult = originalWords.map((w, idx) => {
-      if (idx === originalWords.length - 1) {
-        return { text: w, status: 'missing', rule: 'none' };
-      }
-      if (idx === 0 && originalWords.length > 2) {
-        return { text: w, status: 'harakat_error', userText: w.substring(0, w.length - 1), rule: 'none' };
-      }
-      return { text: w, status: 'correct', rule: 'none' };
+      const word = w.text ?? w;
+      const rule = w.rule ?? 'none';
+      if (idx === originalWords.length - 1) return { text: word, status: 'missing', rule };
+      if (idx === 1 && originalWords.length > 3) return { text: word, status: 'tajweed_error', rule };
+      return { text: word, status: 'correct', rule };
     });
-    
+    const tajweedErrors = wordsResult.filter(w => w.status === 'tajweed_error' && w.rule !== 'none');
     return {
-      score: 75,
+      score: 72,
       words: wordsResult,
-      feedback: 'أداء جيد! لقد نسيت الكلمة الأخيرة، وهناك خطأ بسيط في حركة الكلمة الأولى.'
+      feedback: 'أداء جيد! نسيت كلمة في النهاية وهناك خطأ في حكم التجويد للكلمة الملوّنة.',
+      tajweedErrors,
     };
   } else {
-    // Extra word inserted and middle word missing
     const wordsResult = [];
     originalWords.forEach((w, idx) => {
+      const word = w.text ?? w;
+      const rule = w.rule ?? 'none';
       if (idx === Math.floor(originalWords.length / 2)) {
-        wordsResult.push({ text: w, status: 'missing', rule: 'none' });
-        wordsResult.push({ text: 'يعني', status: 'extra', rule: 'none' }); // Insert extra filler word
+        wordsResult.push({ text: word, status: 'tajweed_error', rule });
+        wordsResult.push({ text: 'يعني', status: 'extra', rule: 'none' });
+      } else if (idx === originalWords.length - 2) {
+        wordsResult.push({ text: word, status: 'missing', rule });
       } else {
-        wordsResult.push({ text: w, status: 'correct', rule: 'none' });
+        wordsResult.push({ text: word, status: 'correct', rule });
       }
     });
-
+    const tajweedErrors = wordsResult.filter(w => w.status === 'tajweed_error' && w.rule !== 'none');
     return {
-      score: 65,
+      score: 60,
       words: wordsResult,
-      feedback: 'تحتاج إلى تثبيت الحفظ. لقد تركت كلمة في المنتصف وأضفت كلمة زائدة ("يعني").'
+      feedback: 'تحتاج إلى مراجعة. انتبه للكلمات المحددة بإطار أحمر وتطبيق الأحكام الموضّحة أدناه.',
+      tajweedErrors,
     };
   }
 }

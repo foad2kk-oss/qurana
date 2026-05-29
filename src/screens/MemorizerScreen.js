@@ -173,13 +173,14 @@ export default function MemorizerScreen() {
       const targetAyahObj = activeAyahs[activeIdx] || activeAyahs[0];
 
       if (isOfflineGraderMode) {
-        // Run Simulated evaluation
-        await new Promise(resolve => setTimeout(resolve, 1500)); // fake delay
-        recitationReport = getMockCorrection(targetAyahObj.text, currentAyah);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        recitationReport = getMockCorrection(targetAyahObj.words, currentAyah);
       } else {
-        // Run OpenAI Whisper voice check
         const transcription = await transcribeAudio(uri, apiKey);
         recitationReport = evaluateRecitation(targetAyahObj.words, transcription);
+        // Enrich with tajweed errors list
+        recitationReport.tajweedErrors = (recitationReport.words || [])
+          .filter(w => (w.status === 'missing' || w.status === 'tajweed_error') && w.rule && w.rule !== 'none');
       }
 
       setEvaluationResult(recitationReport);
@@ -521,68 +522,158 @@ export default function MemorizerScreen() {
               </View>
             )}
 
-            {/* Evaluation Results Card with Gold Glassmorphic frame */}
+            {/* ── Evaluation Result Card ── */}
             {evaluationResult && !isRecording && !isEvaluating && (
               <View style={[styles.resultCard, { backgroundColor: activeColors.surface, borderColor: activeColors.glassBorderGold }]}>
+
+                {/* Score header */}
                 <View style={styles.resultHeader}>
-                  <View style={[styles.scoreBadge, { backgroundColor: evaluationResult.score >= 90 ? COLORS.success + '20' : evaluationResult.score >= 70 ? COLORS.warning + '20' : COLORS.error + '20' }]}>
-                    <Text style={[styles.scoreText, { color: evaluationResult.score >= 90 ? COLORS.success : evaluationResult.score >= 70 ? COLORS.secondary : COLORS.error }]}>
-                      {evaluationResult.score}%
-                    </Text>
+                  <View style={[styles.scoreBadge, {
+                    backgroundColor: evaluationResult.score >= 90 ? COLORS.success + '20'
+                      : evaluationResult.score >= 70 ? COLORS.warning + '20' : COLORS.error + '20'
+                  }]}>
+                    <Text style={[styles.scoreText, {
+                      color: evaluationResult.score >= 90 ? COLORS.success
+                        : evaluationResult.score >= 70 ? COLORS.secondary : COLORS.error
+                    }]}>{evaluationResult.score}%</Text>
                   </View>
-                  <Text style={[styles.resultTitle, { color: activeColors.text }]}>نتيجة التلاوة والتحليل</Text>
+                  <Text style={[styles.resultTitle, { color: activeColors.text }]}>نتيجة التلاوة والتجويد</Text>
                 </View>
 
-                {/* Diff highlights wrapper */}
-                <View style={[styles.diffWrapper, { backgroundColor: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)', borderColor: activeColors.border, borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 12 }]}>
+                {/* Colour legend */}
+                <View style={styles.legendRow}>
+                  {[
+                    { color: COLORS.success,   label: 'صحيح' },
+                    { color: COLORS.error,     label: 'محذوف' },
+                    { color: COLORS.secondary, label: 'خطأ تجويد' },
+                    { color: COLORS.accent,    label: 'زائد' },
+                  ].map(l => (
+                    <View key={l.label} style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: l.color }]} />
+                      <Text style={[styles.legendLabel, { color: activeColors.textSecondary }]}>{l.label}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Word-level diff with tajweed colours */}
+                <View style={[styles.diffWrapper, {
+                  backgroundColor: themeMode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+                  borderColor: activeColors.border,
+                }]}>
                   {evaluationResult.words.map((item, idx) => {
-                    let wordColor = activeColors.text;
-                    let textDeco = 'none';
-                    
+                    const tajweedRule = TAJWEED_RULES[item.rule];
+                    const ruleColor = tajweedRule && item.rule !== 'none'
+                      ? (themeMode === 'dark' ? tajweedRule.darkColor : tajweedRule.color)
+                      : null;
+
+                    let wordColor, textDeco = 'none', bgColor = 'transparent', borderColor = 'transparent';
+
                     if (item.status === 'correct') {
-                      wordColor = COLORS.success;
+                      wordColor = ruleColor || COLORS.success;
                     } else if (item.status === 'missing') {
-                      wordColor = COLORS.error;
+                      wordColor = ruleColor || COLORS.error;
                       textDeco = 'line-through';
+                      bgColor = (ruleColor || COLORS.error) + '18';
+                      borderColor = (ruleColor || COLORS.error) + '60';
+                    } else if (item.status === 'tajweed_error') {
+                      wordColor = ruleColor || COLORS.secondary;
+                      bgColor = (ruleColor || COLORS.secondary) + '18';
+                      borderColor = (ruleColor || COLORS.secondary) + '80';
                     } else if (item.status === 'harakat_error') {
-                      wordColor = COLORS.secondary; // Orange
+                      wordColor = COLORS.secondary;
+                      bgColor = COLORS.secondary + '15';
+                      borderColor = COLORS.secondary + '60';
                     } else if (item.status === 'extra') {
-                      wordColor = COLORS.accent; // Purple
+                      wordColor = COLORS.accent;
+                      bgColor = COLORS.accent + '12';
+                      borderColor = COLORS.accent + '50';
                     }
 
+                    const hasError = item.status !== 'correct';
+
                     return (
-                      <View key={idx} style={styles.diffWordBox}>
+                      <View key={idx} style={[styles.diffWordBox,
+                        hasError && { backgroundColor: bgColor, borderColor, borderWidth: 1, borderRadius: 8, padding: 4 }
+                      ]}>
                         <Text style={[styles.diffWordText, { color: wordColor, textDecorationLine: textDeco }]}>
                           {item.text}
                         </Text>
-                        {item.status === 'harakat_error' && (
-                          <Text style={styles.correctionHarakatHint}>[حركة]</Text>
+                        {/* Tajweed rule badge */}
+                        {item.rule && item.rule !== 'none' && (item.status === 'missing' || item.status === 'tajweed_error') && (
+                          <View style={[styles.ruleBadgeSmall, { backgroundColor: (ruleColor || COLORS.secondary) + '30' }]}>
+                            <Text style={[styles.ruleBadgeSmallText, { color: ruleColor || COLORS.secondary }]}>
+                              {tajweedRule?.name?.split(' ')[0]}
+                            </Text>
+                          </View>
                         )}
                         {item.status === 'extra' && (
-                          <Text style={styles.correctionExtraHint}>[زائد]</Text>
+                          <Text style={[styles.correctionExtraHint, { color: COLORS.accent }]}>زائد</Text>
+                        )}
+                        {item.status === 'harakat_error' && (
+                          <Text style={[styles.correctionHarakatHint, { color: COLORS.secondary }]}>حركة</Text>
                         )}
                       </View>
                     );
                   })}
                 </View>
 
+                {/* Tajweed errors detail panel */}
+                {evaluationResult.tajweedErrors && evaluationResult.tajweedErrors.length > 0 && (
+                  <>
+                    <View style={[styles.divider, { backgroundColor: activeColors.border }]} />
+                    <Text style={[styles.tajweedErrorsTitle, { color: activeColors.text }]}>
+                      ⚠️ أخطاء التجويد المكتشفة:
+                    </Text>
+                    {evaluationResult.tajweedErrors.map((err, i) => {
+                      const rule = TAJWEED_RULES[err.rule];
+                      const ruleColor = rule ? (themeMode === 'dark' ? rule.darkColor : rule.color) : COLORS.secondary;
+                      const correctionMsg = {
+                        qalqalah: 'يجب اهتزاز الصوت عند السكون على حروف القلقلة (ق، ط، ب، ج، د)',
+                        ghunnah:  'يجب إخراج صوت الغنة من الأنف بمقدار حركتين',
+                        ikhfa:    'يجب إخفاء النون جزئياً مع إبقاء الغنة — لا إظهار ولا إدغام',
+                        idgham:   'يجب إدغام النون في الحرف التالي حتى يصيرا حرفاً مشدداً',
+                        iqlab:    'يجب قلب النون ميماً مطبقة مع إبقاء الغنة',
+                        izhar:    'يجب إظهار النون بوضوح بلا غنة عند الحروف الحلقية',
+                        madd:     'يجب مد الصوت بالمقدار الصحيح — حركتان طبيعي، أكثر للفرعي',
+                        tafkheem: 'يجب تفخيم الحرف وتغليظه حتى يمتلئ الفم بصداه',
+                      }[err.rule] || 'راجع حكم هذا الحرف في مدرسة التجويد';
+                      return (
+                        <View key={i} style={[styles.tajweedErrorRow, { borderColor: ruleColor + '50', backgroundColor: ruleColor + '0D' }]}>
+                          <MaterialCommunityIcons name="alert-circle" size={18} color={ruleColor} style={{ marginLeft: 8 }} />
+                          <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                            <View style={styles.tajweedErrorWordRow}>
+                              <View style={[styles.rulePillSmall, { backgroundColor: ruleColor + '25' }]}>
+                                <Text style={[styles.rulePillSmallText, { color: ruleColor }]}>
+                                  {rule?.name?.split(' ')[0]}
+                                </Text>
+                              </View>
+                              <Text style={[styles.tajweedErrorWord, { color: ruleColor }]}>{err.text}</Text>
+                            </View>
+                            <Text style={[styles.tajweedErrorMsg, { color: activeColors.textSecondary }]}>{correctionMsg}</Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </>
+                )}
+
+                <View style={[styles.divider, { backgroundColor: activeColors.border }]} />
                 <Text style={[styles.resultFeedback, { color: activeColors.textSecondary }]}>
                   {evaluationResult.feedback}
                 </Text>
 
-                {/* Compare Recitation Tools */}
+                {/* Compare buttons */}
                 <View style={[styles.divider, { backgroundColor: activeColors.border }]} />
                 <View style={styles.compareVoiceRow}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={[styles.compareVoiceBtn, { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10' }]}
                     onPress={playRecordedVoice}
                     disabled={isPlaybackUserVoice}
                   >
-                    <MaterialCommunityIcons name={isPlaybackUserVoice ? "volume-high" : "volume-medium"} size={16} color={COLORS.primary} />
+                    <MaterialCommunityIcons name={isPlaybackUserVoice ? 'volume-high' : 'volume-medium'} size={16} color={COLORS.primary} />
                     <Text style={[styles.compareVoiceBtnText, { color: COLORS.primary }]}>استمع لتلاوتك</Text>
                   </TouchableOpacity>
-
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={[styles.compareVoiceBtn, { borderColor: activeColors.textSecondary, backgroundColor: activeColors.surfaceAlt }]}
                     onPress={() => playAyah(currentSurahObj.id, currentAyah || 1, currentQari, true)}
                   >
@@ -1168,13 +1259,85 @@ const styles = StyleSheet.create({
   },
   correctionHarakatHint: {
     fontSize: 8,
-    color: COLORS.secondary,
     marginTop: 1,
+    fontWeight: 'bold',
   },
   correctionExtraHint: {
     fontSize: 8,
-    color: COLORS.accent,
     marginTop: 1,
+    fontWeight: 'bold',
+  },
+
+  // Colour legend
+  legendRow: {
+    flexDirection: 'row-reverse',
+    flexWrap: 'wrap',
+    marginBottom: 10,
+    gap: 8,
+  },
+  legendItem: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+  },
+  legendDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    marginLeft: 4,
+  },
+  legendLabel: {
+    fontSize: 10,
+  },
+
+  // Tajweed error detail panel
+  tajweedErrorsTitle: {
+    fontSize: SIZES.fontSm,
+    fontWeight: 'bold',
+    textAlign: 'right',
+    marginBottom: 8,
+  },
+  tajweedErrorRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 8,
+  },
+  tajweedErrorWordRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  tajweedErrorWord: {
+    fontSize: SIZES.fontLg,
+    fontWeight: 'bold',
+  },
+  tajweedErrorMsg: {
+    fontSize: SIZES.fontXs - 1,
+    textAlign: 'right',
+    lineHeight: 17,
+  },
+  rulePillSmall: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 8,
+  },
+  rulePillSmallText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  ruleBadgeSmall: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+    marginTop: 2,
+    alignSelf: 'center',
+  },
+  ruleBadgeSmallText: {
+    fontSize: 9,
+    fontWeight: 'bold',
   },
   resultFeedback: {
     fontSize: SIZES.fontXs,
