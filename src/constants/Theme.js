@@ -1,57 +1,67 @@
 export const COLORS = {
   // Common Colors
-  primary: '#0D9488',      // Teal / Emerald
-  primaryLight: '#2DD4BF', // Light Teal
-  secondary: '#D97706',    // Gold Amber
+  primary: '#0D9488',
+  primaryLight: '#2DD4BF',
+  secondary: '#D97706',
   secondaryLight: '#F59E0B',
-  accent: '#8B5CF6',       // Purple for special items
-  
+  accent: '#8B5CF6',
+
   // Premium Gradients
-  primaryGradient: ['#047857', '#0D9488'],     // Rich Emerald to Teal
-  goldGradient: ['#B45309', '#D97706', '#F59E0B'], // Multi-stop Gold Amber
-  darkGradient: ['#0A0F1D', '#070A14'],        // Elegant dark sky
-  lightGradient: ['#FDFCF7', '#FAF6F0'],       // Ivory background gradient
-  accentGradient: ['#6D28D9', '#8B5CF6'],      // Deep purple to violet
-  
-  // Dark Theme Colors
+  primaryGradient: ['#047857', '#0D9488'],
+  goldGradient: ['#B45309', '#D97706', '#F59E0B'],
+  darkGradient: ['#0A0F1D', '#070A14'],
+  lightGradient: ['#FDFCF7', '#FAF6F0'],
+  accentGradient: ['#6D28D9', '#8B5CF6'],
+  tealGoldGradient: ['#047857', '#0D9488', '#D97706'],
+  nightSkyGradient: ['#0A0F1D', '#0F1A2E', '#0D9488'],
+
+  // Dark Theme
   dark: {
-    background: '#070A14',       // Sleek obsidian dark sky
-    surface: '#0F1626',          // Slate gray surface
-    surfaceAlt: '#1E293B',       // Lighter surface
-    text: '#F3F4F6',             // Near white
-    textSecondary: '#9CA3AF',    // Medium gray
-    textMuted: '#6B7280',        // Dark gray
-    border: '#1E293B',           // Dark border
+    background: '#070A14',
+    surface: '#0F1626',
+    surfaceAlt: '#1E293B',
+    surfaceGlow: '#0F2030',
+    text: '#F3F4F6',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#1E293B',
+    borderGlow: 'rgba(13, 148, 136, 0.4)',
     glassBg: 'rgba(15, 22, 38, 0.75)',
     glassBorder: 'rgba(255, 255, 255, 0.08)',
     glassBorderGold: 'rgba(217, 119, 6, 0.35)',
+    glassBorderTeal: 'rgba(13, 148, 136, 0.35)',
     cardBg: 'rgba(15, 22, 38, 0.85)',
-    tabBarBg: 'rgba(7, 10, 20, 0.94)',
-    tabBarBorder: '#1E293B'
+    tabBarBg: 'rgba(7, 10, 20, 0.97)',
+    tabBarBorder: '#1E293B',
+    starColor: 'rgba(217, 119, 6, 0.15)',
   },
-  
-  // Light Theme Colors
+
+  // Light Theme
   light: {
-    background: '#FAF6F0',       // Warm Ivory
-    surface: '#FFFFFF',          // Pure White
-    surfaceAlt: '#F1F5F9',       // Soft slate gray
-    text: '#0F172A',             // Dark slate
-    textSecondary: '#475569',    // Medium dark slate
-    textMuted: '#94A3B8',        // Lighter slate
-    border: '#E2E8F0',           // Light gray border
+    background: '#FAF6F0',
+    surface: '#FFFFFF',
+    surfaceAlt: '#F1F5F9',
+    surfaceGlow: '#F0FDF9',
+    text: '#0F172A',
+    textSecondary: '#475569',
+    textMuted: '#94A3B8',
+    border: '#E2E8F0',
+    borderGlow: 'rgba(13, 148, 136, 0.25)',
     glassBg: 'rgba(255, 255, 255, 0.85)',
     glassBorder: 'rgba(13, 148, 136, 0.08)',
     glassBorderGold: 'rgba(217, 119, 6, 0.2)',
+    glassBorderTeal: 'rgba(13, 148, 136, 0.2)',
     cardBg: 'rgba(255, 255, 255, 0.92)',
-    tabBarBg: 'rgba(255, 255, 255, 0.96)',
-    tabBarBorder: '#E2E8F0'
+    tabBarBg: 'rgba(255, 255, 255, 0.98)',
+    tabBarBorder: '#E2E8F0',
+    starColor: 'rgba(217, 119, 6, 0.08)',
   },
 
   // State colors
-  success: '#10B981', // Green
-  error: '#EF4444',   // Red
-  warning: '#F59E0B', // Yellow
-  info: '#3B82F6',    // Blue
+  success: '#10B981',
+  error: '#EF4444',
+  warning: '#F59E0B',
+  info: '#3B82F6',
 };
 
 export const SIZES = {
@@ -61,7 +71,7 @@ export const SIZES = {
   lg: 24,
   xl: 32,
   xxl: 40,
-  
+
   fontXs: 12,
   fontSm: 14,
   fontMd: 16,
@@ -92,5 +102,19 @@ export const SHADOWS = {
     shadowOpacity: 0.25,
     shadowRadius: 16,
     elevation: 8,
+  },
+  teal: {
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  gold: {
+    shadowColor: '#D97706',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
   },
 };

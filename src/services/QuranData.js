@@ -13,6 +13,7 @@ export const TAJWEED_RULES = {
   ikhfa: { name: 'إخفاء (Ikhfa)', color: '#3B82F6', darkColor: '#60A5FA', description: 'Hiding the Noon Sakinah or Tanween when followed by specific letters.' },
   idgham: { name: 'إدغام (Idgham)', color: '#8B5CF6', darkColor: '#A78BFA', description: 'Merging Noon Sakinah or Tanween into the next letter with or without Ghunnah.' },
   iqlab: { name: 'إقلاب (Iqlab)', color: '#EC4899', darkColor: '#F472B6', description: 'Converting Noon Sakinah or Tanween into a Meem when followed by Baa.' },
+  izhar: { name: 'إظهار (Izhar)', color: '#14B8A6', darkColor: '#2DD4BF', description: 'Clear pronunciation of Noon Sakinah or Tanween before the six throat letters.' },
   madd: { name: 'مد (Madd)', color: '#EF4444', darkColor: '#F87171', description: 'Prolongation of vowel sounds (Alif, Waw, Yaa) for 2 to 6 beats.' },
   tafkheem: { name: 'تفخيم (Tafkheem)', color: '#06B6D4', darkColor: '#22D3EE', description: 'Heavy/thick pronunciation of specific letters.' }
 };

@@ -199,6 +199,48 @@ export async function transcribeAudio(audioUri, apiKey) {
   }
 }
 
+// Maps tajweed rule IDs to Arabic correction messages
+const TAJWEED_CORRECTION_MESSAGES = {
+  qalqalah: 'انتبه للقلقلة — يجب أن يهتز الصوت عند الحرف الساكن (ق، ط، ب، ج، د)',
+  ghunnah:  'انتبه للغنة — يجب إخراج صوت الأنف بمقدار حركتين على النون أو الميم المشددتين',
+  ikhfa:    'انتبه للإخفاء — لا تُظهر النون تماماً ولا تُدغمها، بل أخفِها مع إبقاء الغنة',
+  idgham:   'انتبه للإدغام — يجب إدخال النون الساكنة في الحرف التالي حتى يصيرا حرفاً مشدداً',
+  iqlab:    'انتبه للإقلاب — يجب تحويل النون الساكنة إلى ميم عند حرف الباء',
+  izhar:    'انتبه للإظهار — يجب نطق النون الساكنة واضحة بلا غنة عند الحروف الحلقية',
+  madd:     'انتبه للمد — يجب إطالة الصوت بالمقدار الصحيح (حركتان للطبيعي، أكثر للفرعي)',
+  tafkheem: 'انتبه للتفخيم — يجب تغليظ الحرف حتى يمتلئ الفم بصداه',
+};
+
+// Analyzes recitation and returns tajweed-specific correction per word
+export function analyzeTajweedCorrections(ayahWords, transcribedText) {
+  const baseResult = evaluateRecitation(ayahWords, transcribedText || '');
+
+  const corrections = [];
+  const wordsWithRules = ayahWords.filter(w => w.rule && w.rule !== 'none');
+
+  wordsWithRules.forEach(wordObj => {
+    const matchedAligned = baseResult.words.find(w => {
+      const norm1 = w.text?.replace(/[ً-ْٰ]/g, '').replace(/[أإآ]/g, 'ا');
+      const norm2 = wordObj.text?.replace(/[ً-ْٰ]/g, '').replace(/[أإآ]/g, 'ا');
+      return norm1 === norm2;
+    });
+
+    const wasMissed = !matchedAligned || matchedAligned.status === 'missing';
+    corrections.push({
+      word: wordObj.text,
+      rule: wordObj.rule,
+      status: wasMissed ? 'needs_attention' : 'ok',
+      message: wasMissed ? TAJWEED_CORRECTION_MESSAGES[wordObj.rule] : null,
+    });
+  });
+
+  return {
+    ...baseResult,
+    tajweedCorrections: corrections,
+    tajweedIssues: corrections.filter(c => c.status === 'needs_attention'),
+  };
+}
+
 // Generate realistic mock correction feedback for demonstration & offline practice
 export function getMockCorrection(ayahText, index = 0) {
   const originalWords = ayahText.split(/\s+/);
