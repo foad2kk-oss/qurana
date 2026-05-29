@@ -16,7 +16,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SIZES, SHADOWS } from '../constants/Theme';
 import { AudioContext } from '../context/AudioContext';
 import { ProgressContext } from '../context/ProgressContext';
-import { ALL_SURAHS, TAJWEED_RULES, loadSurahAyahs } from '../services/QuranData';
+import { ALL_SURAHS, TAJWEED_RULES, loadSurahAyahs, SURAH_JUZ, ALL_QARIS } from '../services/QuranData';
+import { TextInput } from 'react-native';
 
 const SURAHS = ALL_SURAHS;
 import { evaluateRecitation, transcribeAudio, getMockCorrection } from '../services/SpeechService';
@@ -63,6 +64,10 @@ export default function MemorizerScreen() {
   const [isSurahModalOpen, setIsSurahModalOpen] = useState(false);
   const [isAyahRangeModalOpen, setIsAyahRangeModalOpen] = useState(false);
   const [isQariModalOpen, setIsQariModalOpen] = useState(false);
+
+  // Surah filter state
+  const [surahSearch, setSurahSearch] = useState('');
+  const [selectedJuz, setSelectedJuz] = useState(0); // 0 = all
 
   // Recitation evaluation state
   const [evaluationResult, setEvaluationResult] = useState(null);
@@ -626,7 +631,7 @@ export default function MemorizerScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Surah List Modal Selector */}
+      {/* Surah List Modal — with search + juz filter */}
       <Modal
         visible={isSurahModalOpen}
         transparent={true}
@@ -634,28 +639,91 @@ export default function MemorizerScreen() {
         onRequestClose={() => setIsSurahModalOpen(false)}
       >
         <View style={styles.bottomSheetBg}>
-          <View style={[styles.bottomSheetCard, { backgroundColor: activeColors.surface }]}>
+          <View style={[styles.bottomSheetCard, { backgroundColor: activeColors.surface, maxHeight: '85%' }]}>
+            {/* Header */}
             <View style={styles.sheetHeader}>
-              <TouchableOpacity onPress={() => setIsSurahModalOpen(false)}>
+              <TouchableOpacity onPress={() => { setIsSurahModalOpen(false); setSurahSearch(''); setSelectedJuz(0); }}>
                 <Text style={{ color: COLORS.primary, fontWeight: 'bold' }}>إغلاق</Text>
               </TouchableOpacity>
               <Text style={[styles.sheetTitle, { color: activeColors.text }]}>اختر السورة الكريمة</Text>
             </View>
-            
-            <ScrollView style={styles.sheetList}>
-              {SURAHS.map((s, idx) => (
-                <TouchableOpacity 
-                  key={s.id} 
-                  style={[styles.sheetItemRow, { borderBottomColor: activeColors.border }]}
-                  onPress={() => {
-                    setSelectedSurahIndex(idx);
-                    setIsSurahModalOpen(false);
-                  }}
+
+            {/* Search input */}
+            <View style={[styles.searchBox, { backgroundColor: activeColors.surfaceAlt || activeColors.background, borderColor: activeColors.border }]}>
+              <MaterialCommunityIcons name="magnify" size={20} color={activeColors.textSecondary} />
+              <TextInput
+                value={surahSearch}
+                onChangeText={setSurahSearch}
+                placeholder="ابحث باسم السورة أو رقمها..."
+                placeholderTextColor={activeColors.textMuted}
+                style={[styles.searchInput, { color: activeColors.text }]}
+                textAlign="right"
+              />
+              {surahSearch.length > 0 && (
+                <TouchableOpacity onPress={() => setSurahSearch('')}>
+                  <MaterialCommunityIcons name="close-circle" size={18} color={activeColors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Juz filter tabs */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.juzScroll} contentContainerStyle={styles.juzScrollContent}>
+              {[0, ...Array.from({length: 30}, (_, i) => i + 1)].map(juz => (
+                <TouchableOpacity
+                  key={juz}
+                  style={[styles.juzTab, selectedJuz === juz && { backgroundColor: COLORS.primary }]}
+                  onPress={() => setSelectedJuz(juz)}
                 >
-                  <Text style={[styles.sheetItemTextRight, { color: activeColors.textSecondary }]}>{s.type === 'Meccan' ? 'مكية' : 'مدنية'} • {s.totalAyahs} آيات</Text>
-                  <Text style={[styles.sheetItemTextLeft, { color: activeColors.text, fontWeight: idx === selectedSurahIndex ? 'bold' : 'normal' }]}>{s.name} ({s.englishName})</Text>
+                  <Text style={[styles.juzTabText, { color: selectedJuz === juz ? '#FFF' : activeColors.textSecondary }]}>
+                    {juz === 0 ? 'الكل' : `ج${juz}`}
+                  </Text>
                 </TouchableOpacity>
               ))}
+            </ScrollView>
+
+            {/* Filtered surah list */}
+            <ScrollView style={styles.sheetList}>
+              {SURAHS
+                .map((s, idx) => ({ ...s, idx }))
+                .filter(s => {
+                  const matchSearch = surahSearch === '' ||
+                    s.name.includes(surahSearch) ||
+                    s.englishName.toLowerCase().includes(surahSearch.toLowerCase()) ||
+                    String(s.id).includes(surahSearch);
+                  const matchJuz = selectedJuz === 0 || SURAH_JUZ[s.id] === selectedJuz;
+                  return matchSearch && matchJuz;
+                })
+                .map(s => (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={[styles.sheetItemRow, {
+                      borderBottomColor: activeColors.border,
+                      backgroundColor: s.idx === selectedSurahIndex ? COLORS.primary + '12' : 'transparent',
+                    }]}
+                    onPress={() => {
+                      setSelectedSurahIndex(s.idx);
+                      setIsSurahModalOpen(false);
+                      setSurahSearch('');
+                      setSelectedJuz(0);
+                    }}
+                  >
+                    <View style={styles.sheetItemMeta}>
+                      <Text style={[styles.sheetItemTextRight, { color: activeColors.textSecondary }]}>
+                        {s.type === 'Meccan' ? 'مكية' : 'مدنية'} • {s.totalAyahs} آية
+                      </Text>
+                      <View style={[styles.juzBadge, { backgroundColor: COLORS.secondary + '20' }]}>
+                        <Text style={[styles.juzBadgeText, { color: COLORS.secondary }]}>ج{SURAH_JUZ[s.id]}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.sheetItemMain}>
+                      <Text style={[styles.sheetItemNum, { color: COLORS.primary }]}>{s.id}</Text>
+                      <Text style={[styles.sheetItemTextLeft, { color: activeColors.text, fontWeight: s.idx === selectedSurahIndex ? 'bold' : 'normal' }]}>
+                        {s.name}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              }
             </ScrollView>
           </View>
         </View>
@@ -727,7 +795,7 @@ export default function MemorizerScreen() {
         </View>
       </Modal>
 
-      {/* Qari Modal Selector */}
+      {/* Qari Modal — redesigned cards */}
       <Modal
         visible={isQariModalOpen}
         transparent={true}
@@ -740,38 +808,37 @@ export default function MemorizerScreen() {
               <TouchableOpacity onPress={() => setIsQariModalOpen(false)}>
                 <Text style={{ color: COLORS.primary, fontWeight: 'bold' }}>إغلاق</Text>
               </TouchableOpacity>
-              <Text style={[styles.sheetTitle, { color: activeColors.text }]}>اختر القارئ المفضل</Text>
+              <Text style={[styles.sheetTitle, { color: activeColors.text }]}>اختر القارئ</Text>
             </View>
             <View style={{ padding: 12 }}>
-              <TouchableOpacity 
-                style={[styles.qariRowItem, currentQari === 'husary' && { borderColor: COLORS.primary }]}
-                onPress={() => {
-                  setCurrentQari('husary');
-                  setIsQariModalOpen(false);
-                }}
-              >
-                <Text style={[styles.qariRowText, { color: activeColors.text }]}>الشيخ محمود خليل الحصري (معلم)</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.qariRowItem, currentQari === 'minshawi' && { borderColor: COLORS.primary }]}
-                onPress={() => {
-                  setCurrentQari('minshawi');
-                  setIsQariModalOpen(false);
-                }}
-              >
-                <Text style={[styles.qariRowText, { color: activeColors.text }]}>الشيخ محمد صديق المنشاوي (معلم)</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.qariRowItem, currentQari === 'alafasy' && { borderColor: COLORS.primary }]}
-                onPress={() => {
-                  setCurrentQari('alafasy');
-                  setIsQariModalOpen(false);
-                }}
-              >
-                <Text style={[styles.qariRowText, { color: activeColors.text }]}>الشيخ مشاري بن راشد العفاسي</Text>
-              </TouchableOpacity>
+              {ALL_QARIS.map(q => {
+                const isActive = currentQari === q.id;
+                return (
+                  <TouchableOpacity
+                    key={q.id}
+                    onPress={() => { setCurrentQari(q.id); setIsQariModalOpen(false); }}
+                  >
+                    <LinearGradient
+                      colors={isActive ? COLORS.primaryGradient : ['transparent', 'transparent']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[styles.qariCard, {
+                        borderColor: isActive ? COLORS.primary : activeColors.border,
+                        borderWidth: isActive ? 0 : 1,
+                      }]}
+                    >
+                      <View style={[styles.qariIconCircle, { backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : COLORS.primary + '15' }]}>
+                        <MaterialCommunityIcons name={q.icon} size={26} color={isActive ? '#FFF' : COLORS.primary} />
+                      </View>
+                      <View style={{ flex: 1, alignItems: 'flex-end', marginRight: 12 }}>
+                        <Text style={[styles.qariCardName, { color: isActive ? '#FFF' : activeColors.text }]}>{q.name}</Text>
+                        <Text style={[styles.qariCardSub, { color: isActive ? 'rgba(255,255,255,0.8)' : activeColors.textSecondary }]}>{q.subtitle}</Text>
+                      </View>
+                      {isActive && <MaterialCommunityIcons name="check-circle" size={22} color="#FFF" />}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         </View>
@@ -1248,5 +1315,92 @@ const styles = StyleSheet.create({
   qariRowText: {
     fontSize: SIZES.fontSm,
     fontWeight: 'bold',
-  }
+  },
+
+  // Search & Juz filter
+  searchBox: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: SIZES.fontSm,
+    marginRight: 8,
+  },
+  juzScroll: {
+    maxHeight: 44,
+    marginBottom: 8,
+  },
+  juzScrollContent: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  juzTab: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginHorizontal: 3,
+    backgroundColor: 'rgba(13,148,136,0.1)',
+  },
+  juzTabText: {
+    fontSize: SIZES.fontXs,
+    fontWeight: 'bold',
+  },
+  sheetItemMeta: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  sheetItemMain: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sheetItemNum: {
+    fontSize: SIZES.fontXs,
+    fontWeight: 'bold',
+    width: 22,
+    textAlign: 'center',
+  },
+  juzBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  juzBadgeText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+
+  // Qari cards
+  qariCard: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 14,
+    marginVertical: 6,
+    ...SHADOWS.small,
+  },
+  qariIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
+  },
+  qariCardName: {
+    fontSize: SIZES.fontSm,
+    fontWeight: 'bold',
+  },
+  qariCardSub: {
+    fontSize: SIZES.fontXs - 1,
+    marginTop: 2,
+  },
 });
