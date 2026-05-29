@@ -24,7 +24,7 @@ import { evaluateRecitation, transcribeAudio, getMockCorrection } from '../servi
 
 const { width } = Dimensions.get('window');
 
-export default function MemorizerScreen() {
+export default function MemorizerScreen({ navigation }) {
   const { themeMode, isOfflineGraderMode, apiKey, addHistoryLog, toggleMemorized, isVerseMemorized } = useContext(ProgressContext);
   const activeColors = COLORS[themeMode];
 
@@ -245,6 +245,20 @@ export default function MemorizerScreen() {
           </View>
         </TouchableOpacity>
       </View>
+
+      {/* Tafsir quick link */}
+      {navigation && (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Tafsir', { surah: currentSurahObj })}
+          style={[styles.tafsirLinkBar, { backgroundColor: COLORS.primary + '14', borderColor: COLORS.primary + '40' }]}
+        >
+          <MaterialCommunityIcons name="book-open-page-variant" size={15} color={COLORS.primary} />
+          <Text style={[styles.tafsirLinkText, { color: COLORS.primary }]}>
+            اقرأ تفسير سورة {currentSurahObj.name}
+          </Text>
+          <MaterialCommunityIcons name="arrow-left" size={15} color={COLORS.primary} />
+        </TouchableOpacity>
+      )}
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
@@ -941,6 +955,21 @@ export default function MemorizerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  tafsirLinkBar: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+  },
+  tafsirLinkText: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+    textAlign: 'center',
   },
   selectorBar: {
     flexDirection: 'row-reverse',

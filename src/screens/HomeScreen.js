@@ -260,6 +260,7 @@ export default function HomeScreen({ navigation }) {
           {[
             { label: 'الحفظ', sub: 'سمّع آياتك', icon: 'microphone', screen: 'Memorize', grad: COLORS.primaryGradient },
             { label: 'التجويد', sub: 'تدرّب الأحكام', icon: 'book-open-variant', screen: 'Tajweed', grad: COLORS.goldGradient },
+            { label: 'التفسير', sub: 'فهم معاني السور', icon: 'book-open-page-variant', screen: 'Tafsir', grad: ['#7C3AED', '#A855F7'] },
             { label: 'تقدمي',  sub: 'إحصاءات حفظك', icon: 'chart-arc', screen: 'Progress', grad: COLORS.accentGradient },
           ].map(item => (
             <TouchableOpacity key={item.screen} style={styles.quickCard} onPress={() => navigation.navigate(item.screen)}>
