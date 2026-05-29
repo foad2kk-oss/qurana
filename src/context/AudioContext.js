@@ -14,32 +14,29 @@ export const AudioProvider = ({ children }) => {
   const [playbackSpeed, setPlaybackSpeed]     = useState(1.0);
   const [isLoading, setIsLoading]             = useState(false);
 
-  // Recording State
+  // Recording
   const [isRecording, setIsRecording]               = useState(false);
   const [recording, setRecording]                   = useState(null);
   const [recordedUri, setRecordedUri]               = useState(null);
   const [isPlaybackUserVoice, setIsPlaybackUserVoice] = useState(false);
   const [userVoiceSound, setUserVoiceSound]         = useState(null);
 
-  // Playback Range
-  const [ayahRange, setAyahRange] = useState({ start: 1, end: 7 });
+  const [ayahRange, setAyahRange] = useState({ start: 1, end: 5 });
 
-  // Internal refs
-  const soundRef           = useRef(null);
-  const playbackSpeedRef   = useRef(1.0);
-  const isStopping         = useRef(false); // guard against re-entrance
-
-  // ── Queue-based sequential playback ──────────────────────────────────────
-  // queue: flat array of { surahId, ayahNum, qariId } objects to play in order
+  // ── Refs ──────────────────────────────────────────────────────────────────
+  const soundRef          = useRef(null);
+  const playbackSpeedRef  = useRef(1.0);
+  const repCountRef       = useRef(3);
+  // Each new sound gets a unique ID; stale callbacks check against it
+  const activeSoundIdRef  = useRef(0);
+  // Queue
   const queueRef          = useRef([]);
   const queueIndexRef     = useRef(0);
-  const groupRepRef       = useRef(1);
-  const repCountRef       = useRef(3);
 
-  useEffect(() => { repCountRef.current = repetitionCount; }, [repetitionCount]);
+  useEffect(() => { repCountRef.current    = repetitionCount; }, [repetitionCount]);
   useEffect(() => { playbackSpeedRef.current = playbackSpeed; }, [playbackSpeed]);
 
-  // ── Audio mode setup ──────────────────────────────────────────────────────
+  // ── Setup ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     Audio.setAudioModeAsync({
       allowsRecordingIOS: true,
@@ -50,8 +47,9 @@ export const AudioProvider = ({ children }) => {
     return () => { unloadSound(); unloadUserVoice(); };
   }, []);
 
-  // ── Sound helpers ─────────────────────────────────────────────────────────
   const unloadSound = async () => {
+    // Invalidate any active sound before unloading so its callbacks are ignored
+    activeSoundIdRef.current = activeSoundIdRef.current + 1000;
     if (soundRef.current) {
       try { await soundRef.current.unloadAsync(); } catch (_) {}
       soundRef.current = null;
@@ -65,11 +63,31 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
-  // ── Core: play one item from the queue ────────────────────────────────────
-  const playQueueItem = useCallback(async (item) => {
-    isStopping.current = false;
+  // ── Move to next item in queue ────────────────────────────────────────────
+  const advanceQueue = useCallback(async () => {
+    const nextIndex = queueIndexRef.current + 1;
+    if (nextIndex < queueRef.current.length) {
+      queueIndexRef.current = nextIndex;
+      const next = queueRef.current[nextIndex];
+      if (next._groupPass !== undefined) {
+        setGroupRepetition(next._groupPass);
+      }
+      // Small delay to let the previous sound fully release
+      setTimeout(() => _loadAndPlay(next), 150);
+    } else {
+      setIsPlaying(false);
+      setGroupRepetition(1);
+      await unloadSound();
+    }
+  }, []);
+
+  // ── Load & play one queue item ────────────────────────────────────────────
+  const _loadAndPlay = useCallback(async (item) => {
     setIsLoading(true);
     await unloadSound();
+
+    // Each sound gets a unique ID captured in its closure
+    const mySoundId = ++activeSoundIdRef.current;
 
     setCurrentSurah(item.surahId);
     setCurrentAyah(item.ayahNum);
@@ -88,14 +106,12 @@ export const AudioProvider = ({ children }) => {
         { uri: url },
         { shouldPlay: true, rate: playbackSpeedRef.current, shouldCorrectPitch: true },
         (status) => {
-          if (!status || isStopping.current) return;
-          // Reliable finish detection: loaded + not playing + reached end
-          const finished =
-            status.didJustFinish ||
-            (status.isLoaded && !status.isPlaying && !status.isBuffering &&
-             status.durationMillis && status.positionMillis >= status.durationMillis - 200);
-          if (finished) {
-            onCurrentAyahFinished();
+          // Ignore callbacks from sounds that are no longer active
+          if (activeSoundIdRef.current !== mySoundId) return;
+          if (status.didJustFinish) {
+            // Invalidate this sound's ID so duplicate callbacks are ignored
+            activeSoundIdRef.current = mySoundId + 0.5;
+            advanceQueue();
           }
         },
       );
@@ -107,70 +123,36 @@ export const AudioProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [advanceQueue]);
 
-  // ── Called when the playing ayah finishes ─────────────────────────────────
-  const onCurrentAyahFinished = useCallback(async () => {
-    if (isStopping.current) return;
-    isStopping.current = true; // prevent double-fire
-
-    const nextIndex = queueIndexRef.current + 1;
-
-    if (nextIndex < queueRef.current.length) {
-      queueIndexRef.current = nextIndex;
-      const next = queueRef.current[nextIndex];
-      // Update group rep display when we restart from the beginning of a pass
-      if (next._groupPass !== undefined) {
-        groupRepRef.current = next._groupPass;
-        setGroupRepetition(next._groupPass);
-      }
-      // slight delay so the sound fully unloads before next load
-      setTimeout(() => playQueueItem(next), 100);
-    } else {
-      // All done
-      setIsPlaying(false);
-      setGroupRepetition(1);
-      groupRepRef.current = 1;
-      await unloadSound();
-    }
-  }, [playQueueItem]);
-
-  // ── Build the queue and start playing ─────────────────────────────────────
+  // ── Public: play the whole group N times ──────────────────────────────────
   const playGroup = useCallback((surahId, rangeStart, rangeEnd, qariId = currentQari) => {
     const repCount = repCountRef.current;
     const queue = [];
-
     for (let pass = 1; pass <= repCount; pass++) {
       for (let ayah = rangeStart; ayah <= rangeEnd; ayah++) {
         queue.push({ surahId, ayahNum: ayah, qariId, _groupPass: pass });
       }
     }
-
-    queueRef.current    = queue;
+    queueRef.current      = queue;
     queueIndexRef.current = 0;
-    groupRepRef.current = 1;
     setGroupRepetition(1);
+    if (queue.length > 0) _loadAndPlay(queue[0]);
+  }, [currentQari, _loadAndPlay]);
 
-    if (queue.length > 0) {
-      playQueueItem(queue[0]);
-    }
-  }, [currentQari, playQueueItem]);
-
-  // ── Play single ayah (manual navigation) ──────────────────────────────────
+  // ── Public: play a single ayah (manual nav) ───────────────────────────────
   const playAyah = useCallback(async (surahId, ayahNum, qariId = currentQari, forceStart = true) => {
-    // Single-ayah play clears the queue
-    queueRef.current = [{ surahId, ayahNum, qariId: qariId || currentQari, _groupPass: 1 }];
+    const item = { surahId, ayahNum, qariId: qariId || currentQari, _groupPass: 1 };
+    queueRef.current      = [item];
     queueIndexRef.current = 0;
-    groupRepRef.current = 1;
     setGroupRepetition(1);
-    if (forceStart) {
-      await playQueueItem({ surahId, ayahNum, qariId: qariId || currentQari });
-    }
-  }, [currentQari, playQueueItem]);
+    if (forceStart) _loadAndPlay(item);
+  }, [currentQari, _loadAndPlay]);
 
   // ── Pause / Resume ────────────────────────────────────────────────────────
   const pauseSound = async () => {
-    isStopping.current = true;
+    // Prevent advanceQueue from firing while paused
+    activeSoundIdRef.current = activeSoundIdRef.current + 0.1;
     if (soundRef.current) {
       try { await soundRef.current.pauseAsync(); } catch (_) {}
     }
@@ -178,15 +160,22 @@ export const AudioProvider = ({ children }) => {
   };
 
   const resumeSound = async () => {
-    isStopping.current = false;
     if (soundRef.current) {
+      // Re-register a fresh sound ID so completion callbacks work again
+      const mySoundId = ++activeSoundIdRef.current;
       try {
+        await soundRef.current.setOnPlaybackStatusUpdate((status) => {
+          if (activeSoundIdRef.current !== mySoundId) return;
+          if (status.didJustFinish) {
+            activeSoundIdRef.current = mySoundId + 0.5;
+            advanceQueue();
+          }
+        });
         await soundRef.current.playAsync();
         setIsPlaying(true);
       } catch (_) {}
     } else if (queueRef.current.length > 0) {
-      const item = queueRef.current[queueIndexRef.current];
-      if (item) playQueueItem(item);
+      _loadAndPlay(queueRef.current[queueIndexRef.current]);
     }
   };
 
@@ -261,7 +250,7 @@ export const AudioProvider = ({ children }) => {
       const { sound } = await Audio.Sound.createAsync(
         { uri: recordedUri },
         { shouldPlay: true },
-        (status) => { if (status.didJustFinish) setIsPlaybackUserVoice(false); }
+        (s) => { if (s.didJustFinish) setIsPlaybackUserVoice(false); }
       );
       setUserVoiceSound(sound);
       setIsPlaybackUserVoice(true);
@@ -281,30 +270,18 @@ export const AudioProvider = ({ children }) => {
 
   return (
     <AudioContext.Provider value={{
-      isPlaying,
-      currentSurah,
-      currentAyah,
-      currentQari,
-      setCurrentQari,
-      repetitionCount,
-      setRepetitionCount,
+      isPlaying, currentSurah, currentAyah,
+      currentQari, setCurrentQari,
+      repetitionCount, setRepetitionCount,
       groupRepetition,
-      playbackSpeed,
-      setSpeed,
+      playbackSpeed, setSpeed,
       isLoading,
-      playAyah,
-      playGroup,
-      pauseSound,
-      resumeSound,
-      unloadSound,
-      ayahRange,
-      setAyahRange,
-      isRecording,
-      recordedUri,
-      startRecording,
-      stopRecording,
-      playRecordedVoice,
-      stopRecordedVoice,
+      playAyah, playGroup,
+      pauseSound, resumeSound, unloadSound,
+      ayahRange, setAyahRange,
+      isRecording, recordedUri,
+      startRecording, stopRecording,
+      playRecordedVoice, stopRecordedVoice,
       isPlaybackUserVoice,
     }}>
       {children}

@@ -930,9 +930,15 @@ export default function MemorizerScreen({ navigation }) {
               <Text style={[styles.sheetTitle, { color: activeColors.text }]}>تحديد نطاق الآيات</Text>
             </View>
             
-            <Text style={{ textAlign: 'center', marginVertical: 12, color: activeColors.textSecondary }}>
+            <Text style={{ textAlign: 'center', marginVertical: 8, color: activeColors.textSecondary }}>
               السورة تحتوي على {currentSurahObj.totalAyahs} آية
             </Text>
+            <View style={[styles.rangeHintBox, { backgroundColor: COLORS.secondary + '18', borderColor: COLORS.secondary + '40' }]}>
+              <MaterialCommunityIcons name="information-outline" size={14} color={COLORS.secondary} />
+              <Text style={[styles.rangeHintText, { color: COLORS.secondary }]}>
+                الحد الأقصى للعرض والتسميع: 8 آيات
+              </Text>
+            </View>
 
             <View style={styles.rangeSelectorColumns}>
               {/* End Ayah Column */}
@@ -941,10 +947,12 @@ export default function MemorizerScreen({ navigation }) {
                 <ScrollView style={{ height: 160 }}>
                   {Array.from({ length: currentSurahObj.totalAyahs }).map((_, i) => {
                     const val = i + 1;
+                    // Must be >= start and within 8-ayah window
                     if (val < ayahRange.start) return null;
+                    if (val > ayahRange.start + 7) return null;
                     return (
-                      <TouchableOpacity 
-                        key={i} 
+                      <TouchableOpacity
+                        key={i}
                         style={[styles.rangeValItem, val === ayahRange.end && { backgroundColor: COLORS.primary + '20' }]}
                         onPress={() => setAyahRange(prev => ({ ...prev, end: val }))}
                       >
@@ -962,11 +970,13 @@ export default function MemorizerScreen({ navigation }) {
                   {Array.from({ length: currentSurahObj.totalAyahs }).map((_, i) => {
                     const val = i + 1;
                     return (
-                      <TouchableOpacity 
-                        key={i} 
+                      <TouchableOpacity
+                        key={i}
                         style={[styles.rangeValItem, val === ayahRange.start && { backgroundColor: COLORS.primary + '20' }]}
                         onPress={() => {
-                          setAyahRange({ start: val, end: Math.max(val, ayahRange.end) });
+                          // Clamp end to start+7 when start changes
+                          const newEnd = Math.min(Math.max(val, ayahRange.end), val + 7);
+                          setAyahRange({ start: val, end: newEnd });
                         }}
                       >
                         <Text style={{ color: val === ayahRange.start ? COLORS.primary : activeColors.text, fontWeight: val === ayahRange.start ? 'bold' : 'normal' }}>الآية {val}</Text>
@@ -1035,6 +1045,21 @@ export default function MemorizerScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  rangeHintBox: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 6,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  rangeHintText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   tafsirLinkBar: {
     flexDirection: 'row-reverse',

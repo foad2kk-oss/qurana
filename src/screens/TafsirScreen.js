@@ -44,7 +44,7 @@ function SurahRow({ surah, isSelected, onPress, activeColors }) {
       <View style={{ flex: 1 }}>
         <Text style={[styles.surahNameAr, { color: activeColors.text }]}>{surah.name}</Text>
         <Text style={[styles.surahSubtitle, { color: activeColors.textMuted }]}>
-          {surah.englishName} · {surah.numberOfAyahs} آية
+          {surah.numberOfAyahs} آية · جزء {SURAH_JUZ[surah.number] || 1}
         </Text>
       </View>
       <View style={[styles.juzBadge, { backgroundColor: COLORS.primary + '22' }]}>
@@ -84,7 +84,9 @@ function TafsirCard({ tafsir, surah, activeColors }) {
         <View style={styles.tafsirHeaderTop}>
           <View>
             <Text style={styles.tafsirSurahName}>{tafsir.title || surah.name}</Text>
-            <Text style={styles.tafsirSurahEn}>{surah.englishName} · {tafsir.ayahCount || surah.numberOfAyahs} آية</Text>
+            <Text style={styles.tafsirSurahEn}>
+              {tafsir.ayahCount || surah.numberOfAyahs} آية · جزء {SURAH_JUZ[surah.number] || 1}
+            </Text>
           </View>
           <View style={[styles.revelationBadge, { backgroundColor: revBadge.bg }]}>
             <MaterialCommunityIcons name={revBadge.icon} size={13} color={revBadge.text} />
