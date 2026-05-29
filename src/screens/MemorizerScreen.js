@@ -92,7 +92,9 @@ export default function MemorizerScreen({ navigation }) {
       try {
         const ayahs = await loadSurahAyahs(currentSurahObj.id);
         setActiveAyahs(ayahs);
-        setAyahRange({ start: 1, end: currentSurahObj.totalAyahs });
+        // Default range: first 5 ayahs (or all if surah has ≤5)
+        const defaultEnd = Math.min(5, currentSurahObj.totalAyahs);
+        setAyahRange({ start: 1, end: defaultEnd });
         setEvaluationResult(null);
       } catch (err) {
         console.error(err);
@@ -494,7 +496,7 @@ export default function MemorizerScreen({ navigation }) {
                   if (isPlaying) {
                     pauseSound();
                   } else if (!currentAyah || currentSurah !== currentSurahObj.id) {
-                    playGroup(currentSurahObj.id, ayahRange.start);
+                    playGroup(currentSurahObj.id, ayahRange.start, ayahRange.end);
                   } else {
                     resumeSound();
                   }
@@ -515,7 +517,7 @@ export default function MemorizerScreen({ navigation }) {
               {/* Restart group from beginning */}
               <TouchableOpacity
                 style={[styles.sideControlBtn, { borderColor: activeColors.border, backgroundColor: activeColors.surface }]}
-                onPress={() => playGroup(currentSurahObj.id, ayahRange.start)}
+                onPress={() => playGroup(currentSurahObj.id, ayahRange.start, ayahRange.end)}
               >
                 <MaterialCommunityIcons name="restart" size={24} color={activeColors.text} />
               </TouchableOpacity>
@@ -767,7 +769,7 @@ export default function MemorizerScreen({ navigation }) {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.compareVoiceBtn, { borderColor: activeColors.textSecondary, backgroundColor: activeColors.surfaceAlt }]}
-                    onPress={() => playGroup(currentSurahObj.id, ayahRange.start)}
+                    onPress={() => playGroup(currentSurahObj.id, ayahRange.start, ayahRange.end)}
                   >
                     <MaterialCommunityIcons name="headphones" size={16} color={activeColors.text} />
                     <Text style={[styles.compareVoiceBtnText, { color: activeColors.text }]}>استمع للشيخ</Text>
