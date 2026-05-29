@@ -36,11 +36,12 @@ export default function MemorizerScreen({ navigation }) {
     setCurrentQari,
     repetitionCount,
     setRepetitionCount,
-    currentRepetition,
+    groupRepetition,
     playbackSpeed,
     setSpeed,
     isLoading,
     playAyah,
+    playGroup,
     pauseSound,
     resumeSound,
     unloadSound,
@@ -169,27 +170,28 @@ export default function MemorizerScreen({ navigation }) {
     setIsEvaluating(true);
     try {
       let recitationReport;
-      const activeIdx = (currentAyah || 1) - 1;
-      const targetAyahObj = activeAyahs[activeIdx] || activeAyahs[0];
+
+      // Combine all words from the selected ayah range
+      const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, ayahRange.end);
+      const groupWords = rangeAyahs.flatMap(a => a.words || []);
 
       if (isOfflineGraderMode) {
         await new Promise(resolve => setTimeout(resolve, 1500));
-        recitationReport = getMockCorrection(targetAyahObj.words, currentAyah);
+        recitationReport = getMockCorrection(groupWords, ayahRange.start);
       } else {
         const transcription = await transcribeAudio(uri, apiKey);
-        recitationReport = evaluateRecitation(targetAyahObj.words, transcription);
-        // Enrich with tajweed errors list
+        recitationReport = evaluateRecitation(groupWords, transcription);
         recitationReport.tajweedErrors = (recitationReport.words || [])
           .filter(w => (w.status === 'missing' || w.status === 'tajweed_error') && w.rule && w.rule !== 'none');
       }
 
       setEvaluationResult(recitationReport);
-      
-      // Save result to History log
-      addHistoryLog(currentSurahObj.id, currentAyah || 1, recitationReport.score, recitationReport.feedback);
+
+      // Save result to History log (use range start ayah as reference)
+      addHistoryLog(currentSurahObj.id, ayahRange.start, recitationReport.score, recitationReport.feedback);
     } catch (e) {
       console.error(e);
-      alert(e.message === 'API_KEY_MISSING' 
+      alert(e.message === 'API_KEY_MISSING'
         ? 'يرجى إدخال مفتاح API الخاص بـ OpenAI في الإعدادات لتفعيل التحليل بالذكاء الاصطناعي، أو تشغيل وضع التقييم المحلي.'
         : 'فشل تحليل الصوت. يرجى التأكد من اتصال الإنترنت والمحاولة مرة أخرى.'
       );
@@ -209,6 +211,8 @@ export default function MemorizerScreen({ navigation }) {
   };
 
   const currentPlayingAyahObj = activeAyahs[(currentAyah || 1) - 1] || activeAyahs[0];
+  // All ayahs in the selected range to display in the board
+  const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, ayahRange.end);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: activeColors.background }]}>
@@ -265,7 +269,7 @@ export default function MemorizerScreen({ navigation }) {
         {/* Playback Settings Ribbon */}
         <View style={[styles.settingsRibbon, { backgroundColor: activeColors.surface, borderColor: activeColors.glassBorder }]}>
           <View style={styles.ribbonItem}>
-            <Text style={[styles.ribbonLabel, { color: activeColors.textSecondary }]}>التكرار للآية</Text>
+            <Text style={[styles.ribbonLabel, { color: activeColors.textSecondary }]}>تكرار المجموعة</Text>
             <View style={styles.numberControl}>
               <TouchableOpacity onPress={() => setRepetitionCount(Math.max(1, repetitionCount - 1))}>
                 <MaterialCommunityIcons name="minus" size={16} color={activeColors.text} />
@@ -347,70 +351,116 @@ export default function MemorizerScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Quran Display Board with Gold Border Frame */}
+        {/* Quran Display Board — shows all ayahs in the selected range */}
         <View style={[styles.quranBoard, { backgroundColor: activeColors.surface, borderColor: activeColors.glassBorderGold }]}>
-          {isLoadingAyahs || !currentPlayingAyahObj ? (
+          {isLoadingAyahs || rangeAyahs.length === 0 ? (
             <View style={{ padding: 40, alignItems: 'center' }}>
               <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text style={{ marginTop: 10, color: activeColors.textSecondary, fontFamily: 'System' }}>جاري تحميل آيات السورة الكريمة...</Text>
+              <Text style={{ marginTop: 10, color: activeColors.textSecondary }}>جاري تحميل آيات السورة الكريمة...</Text>
             </View>
           ) : (
             <>
+              {/* Board header: range info + group repeat indicator */}
               <View style={styles.boardHeader}>
-                <TouchableOpacity 
-                  style={[styles.favoriteBtn, { backgroundColor: isVerseMemorized(currentSurahObj.id, currentAyah || 1) ? COLORS.primary + '20' : 'transparent' }]}
-                  onPress={() => toggleMemorized(currentSurahObj.id, currentAyah || 1)}
-                >
-                  <MaterialCommunityIcons 
-                    name={isVerseMemorized(currentSurahObj.id, currentAyah || 1) ? "check-circle" : "check-circle-outline"} 
-                    size={22} 
-                    color={isVerseMemorized(currentSurahObj.id, currentAyah || 1) ? COLORS.primary : activeColors.textMuted} 
-                  />
-                  <Text style={[styles.favBtnText, { color: isVerseMemorized(currentSurahObj.id, currentAyah || 1) ? COLORS.primary : activeColors.textSecondary }]}>حفظت الآية</Text>
-                </TouchableOpacity>
-                
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  {isPlaying && activeTab === 'listen' && (
+                    <View style={[styles.groupRepBadge, { backgroundColor: COLORS.primary + '20' }]}>
+                      <ActivityIndicator color={COLORS.primary} size="small" />
+                      <Text style={[styles.groupRepText, { color: COLORS.primary }]}>
+                        {groupRepetition}/{repetitionCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={[styles.ayahIndicatorText, { color: activeColors.textSecondary }]}>
-                  الآية {currentAyah || 1} من {currentSurahObj.totalAyahs}
+                  الآيات {ayahRange.start}–{ayahRange.end} · {rangeAyahs.length} آية
                 </Text>
               </View>
 
-              {/* Interactive Word Level Quran Rendering */}
-              <View style={[styles.quranWordsWrapper, { backgroundColor: themeMode === 'dark' ? 'rgba(13, 148, 136, 0.04)' : '#FAF9F6', borderColor: activeColors.border, borderWidth: 1, borderRadius: 12, padding: 12 }]}>
-                {currentPlayingAyahObj.words.map((word, idx) => {
-                  const ruleDetails = TAJWEED_RULES[word.rule] || TAJWEED_RULES.none;
-                  const wordColor = themeMode === 'dark' ? ruleDetails.darkColor : ruleDetails.color;
-                  const hasRule = word.rule !== 'none';
-                  
-                  return (
-                    <TouchableOpacity
-                      key={idx}
-                      activeOpacity={hasRule ? 0.6 : 1.0}
-                      onPress={() => handleWordPress(word)}
-                      style={[
-                        styles.wordTouch, 
-                        hasRule && { borderBottomWidth: 2, borderBottomColor: wordColor, borderStyle: 'dashed' }
-                      ]}
-                    >
-                      <Text style={[styles.quranWordText, { color: hasRule ? wordColor : activeColors.text }]}>
-                        {word.text}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+              {/* All ayahs in range */}
+              {rangeAyahs.map((ayahObj, aIdx) => {
+                const ayahNum = ayahRange.start + aIdx;
+                const isCurrentlyPlaying = currentAyah === ayahNum && isPlaying;
+                const isCurrentAyah = currentAyah === ayahNum;
 
-              {/* Translation */}
-              <View style={[styles.divider, { backgroundColor: activeColors.border }]} />
-              <Text style={[styles.translationTextText, { color: activeColors.textSecondary }]}>
-                {currentPlayingAyahObj.translation}
-              </Text>
+                return (
+                  <View
+                    key={ayahObj.id || ayahNum}
+                    style={[
+                      styles.ayahBlock,
+                      {
+                        backgroundColor: isCurrentlyPlaying
+                          ? COLORS.primary + '12'
+                          : isCurrentAyah
+                          ? COLORS.primary + '07'
+                          : 'transparent',
+                        borderColor: isCurrentAyah ? COLORS.primary + '50' : activeColors.border,
+                        borderWidth: isCurrentAyah ? 1.5 : 1,
+                      },
+                    ]}
+                  >
+                    {/* Ayah number badge */}
+                    <View style={styles.ayahNumRow}>
+                      <View style={[styles.ayahNumBadge, { backgroundColor: isCurrentAyah ? COLORS.primary : activeColors.surfaceAlt }]}>
+                        <Text style={[styles.ayahNumBadgeText, { color: isCurrentAyah ? '#FFF' : activeColors.textMuted }]}>
+                          {ayahNum}
+                        </Text>
+                      </View>
+                      {isCurrentlyPlaying && (
+                        <View style={[styles.nowPlayingDot, { backgroundColor: COLORS.primary }]} />
+                      )}
+                      <TouchableOpacity
+                        style={{ marginRight: 'auto' }}
+                        onPress={() => toggleMemorized(currentSurahObj.id, ayahNum)}
+                      >
+                        <MaterialCommunityIcons
+                          name={isVerseMemorized(currentSurahObj.id, ayahNum) ? 'check-circle' : 'check-circle-outline'}
+                          size={18}
+                          color={isVerseMemorized(currentSurahObj.id, ayahNum) ? COLORS.primary : activeColors.textMuted}
+                        />
+                      </TouchableOpacity>
+                    </View>
 
-              {/* Playback Repeat Indicator (Active in Listen Mode) */}
+                    {/* Interactive word-level Quran text */}
+                    <View style={[styles.quranWordsWrapper, {
+                      backgroundColor: themeMode === 'dark' ? 'rgba(13,148,136,0.04)' : '#FAF9F6',
+                    }]}>
+                      {ayahObj.words.map((word, idx) => {
+                        const ruleDetails = TAJWEED_RULES[word.rule] || TAJWEED_RULES.none;
+                        const wordColor = themeMode === 'dark' ? ruleDetails.darkColor : ruleDetails.color;
+                        const hasRule = word.rule !== 'none';
+                        return (
+                          <TouchableOpacity
+                            key={idx}
+                            activeOpacity={hasRule ? 0.6 : 1.0}
+                            onPress={() => handleWordPress(word)}
+                            style={[
+                              styles.wordTouch,
+                              hasRule && { borderBottomWidth: 2, borderBottomColor: wordColor, borderStyle: 'dashed' },
+                            ]}
+                          >
+                            <Text style={[styles.quranWordText, { color: hasRule ? wordColor : activeColors.text }]}>
+                              {word.text}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    {/* Translation */}
+                    <Text style={[styles.translationTextText, { color: activeColors.textSecondary, marginTop: 6 }]}>
+                      {ayahObj.translation}
+                    </Text>
+                  </View>
+                );
+              })}
+
+              {/* Group playing indicator */}
               {isPlaying && activeTab === 'listen' && (
                 <View style={[styles.repeatOverlay, { backgroundColor: COLORS.primary + '15' }]}>
                   <ActivityIndicator color={COLORS.primary} size="small" style={{ marginLeft: 8 }} />
                   <Text style={[styles.repeatOverlayText, { color: COLORS.primary }]}>
-                    جاري التلاوة - التكرار الحالي: ({currentRepetition} / {repetitionCount})
+                    يتلو الشيخ · تكرار المجموعة {groupRepetition}/{repetitionCount}
                   </Text>
                 </View>
               )}
@@ -422,29 +472,31 @@ export default function MemorizerScreen({ navigation }) {
         {activeTab === 'listen' && (
           <View style={styles.controlCenter}>
             <View style={styles.recitationControlsRow}>
-              <TouchableOpacity 
+              {/* Skip to previous ayah */}
+              <TouchableOpacity
                 style={[styles.sideControlBtn, { borderColor: activeColors.border, backgroundColor: activeColors.surface }]}
                 onPress={() => {
-                  const current = currentAyah || 1;
-                  if (current < ayahRange.end) {
-                    playAyah(currentSurahObj.id, current + 1);
-                  }
+                  const current = currentAyah || ayahRange.start;
+                  if (current > ayahRange.start) playAyah(currentSurahObj.id, current - 1);
                 }}
-                disabled={currentAyah >= ayahRange.end}
+                disabled={!currentAyah || currentAyah <= ayahRange.start}
               >
-                <MaterialCommunityIcons name="skip-previous" size={24} color={currentAyah >= ayahRange.end ? activeColors.textMuted : activeColors.text} />
+                <MaterialCommunityIcons
+                  name="skip-next"
+                  size={24}
+                  color={(!currentAyah || currentAyah <= ayahRange.start) ? activeColors.textMuted : activeColors.text}
+                />
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              {/* Play / Pause whole group */}
+              <TouchableOpacity
                 onPress={() => {
                   if (isPlaying) {
                     pauseSound();
+                  } else if (!currentAyah || currentSurah !== currentSurahObj.id) {
+                    playGroup(currentSurahObj.id, ayahRange.start);
                   } else {
-                    if (!currentAyah || currentSurah !== currentSurahObj.id) {
-                      playAyah(currentSurahObj.id, ayahRange.start);
-                    } else {
-                      resumeSound();
-                    }
+                    resumeSound();
                   }
                 }}
               >
@@ -455,22 +507,48 @@ export default function MemorizerScreen({ navigation }) {
                   {isLoading ? (
                     <ActivityIndicator color="#FFF" size="small" />
                   ) : (
-                    <MaterialCommunityIcons name={isPlaying ? "pause" : "play"} size={36} color="#FFF" />
+                    <MaterialCommunityIcons name={isPlaying ? 'pause' : 'play'} size={36} color="#FFF" />
                   )}
                 </LinearGradient>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              {/* Restart group from beginning */}
+              <TouchableOpacity
                 style={[styles.sideControlBtn, { borderColor: activeColors.border, backgroundColor: activeColors.surface }]}
-                onPress={() => {
-                  const current = currentAyah || 1;
-                  if (current > ayahRange.start) {
-                    playAyah(currentSurahObj.id, current - 1);
-                  }
-                }}
-                disabled={currentAyah <= ayahRange.start}
+                onPress={() => playGroup(currentSurahObj.id, ayahRange.start)}
               >
-                <MaterialCommunityIcons name="skip-next" size={24} color={currentAyah <= ayahRange.start ? activeColors.textMuted : activeColors.text} />
+                <MaterialCommunityIcons name="restart" size={24} color={activeColors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Skip to next ayah (manual nav) */}
+            <View style={styles.ayahSkipRow}>
+              <TouchableOpacity
+                style={[styles.ayahSkipBtn, { borderColor: activeColors.border, backgroundColor: activeColors.surfaceAlt }]}
+                onPress={() => {
+                  const current = currentAyah || ayahRange.start;
+                  if (current < ayahRange.end) playAyah(currentSurahObj.id, current + 1);
+                }}
+                disabled={currentAyah >= ayahRange.end}
+              >
+                <MaterialCommunityIcons name="chevron-right" size={16} color={currentAyah >= ayahRange.end ? activeColors.textMuted : activeColors.text} />
+                <Text style={[styles.ayahSkipText, { color: currentAyah >= ayahRange.end ? activeColors.textMuted : activeColors.text }]}>
+                  الآية التالية
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.ayahSkipBtn, { borderColor: activeColors.border, backgroundColor: activeColors.surfaceAlt }]}
+                onPress={() => {
+                  const current = currentAyah || ayahRange.start;
+                  if (current > ayahRange.start) playAyah(currentSurahObj.id, current - 1);
+                }}
+                disabled={!currentAyah || currentAyah <= ayahRange.start}
+              >
+                <Text style={[styles.ayahSkipText, { color: (!currentAyah || currentAyah <= ayahRange.start) ? activeColors.textMuted : activeColors.text }]}>
+                  الآية السابقة
+                </Text>
+                <MaterialCommunityIcons name="chevron-left" size={16} color={(!currentAyah || currentAyah <= ayahRange.start) ? activeColors.textMuted : activeColors.text} />
               </TouchableOpacity>
             </View>
           </View>
@@ -689,7 +767,7 @@ export default function MemorizerScreen({ navigation }) {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.compareVoiceBtn, { borderColor: activeColors.textSecondary, backgroundColor: activeColors.surfaceAlt }]}
-                    onPress={() => playAyah(currentSurahObj.id, currentAyah || 1, currentQari, true)}
+                    onPress={() => playGroup(currentSurahObj.id, ayahRange.start)}
                   >
                     <MaterialCommunityIcons name="headphones" size={16} color={activeColors.text} />
                     <Text style={[styles.compareVoiceBtnText, { color: activeColors.text }]}>استمع للشيخ</Text>
@@ -1143,6 +1221,65 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  ayahSkipRow: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'center',
+    gap: 12,
+    marginTop: 10,
+  },
+  ayahSkipBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  ayahSkipText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  ayahBlock: {
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+  },
+  ayahNumRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  ayahNumBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ayahNumBadgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  nowPlayingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  groupRepBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  groupRepText: {
+    fontSize: 13,
+    fontWeight: 'bold',
   },
   mainPlayBtn: {
     width: 64,

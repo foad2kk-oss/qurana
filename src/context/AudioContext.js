@@ -5,38 +5,53 @@ import { getAudioUrl } from '../services/QuranData';
 export const AudioContext = createContext();
 
 export const AudioProvider = ({ children }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSurah, setCurrentSurah] = useState(null);
-  const [currentAyah, setCurrentAyah] = useState(null);
-  const [currentQari, setCurrentQari] = useState('husary');
-  const [repetitionCount, setRepetitionCount] = useState(3);
-  const [currentRepetition, setCurrentRepetition] = useState(1);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPlaying, setIsPlaying]               = useState(false);
+  const [currentSurah, setCurrentSurah]         = useState(null);
+  const [currentAyah, setCurrentAyah]           = useState(null);
+  const [currentQari, setCurrentQari]           = useState('husary');
+  const [repetitionCount, setRepetitionCount]   = useState(3);   // times to repeat the whole group
+  const [groupRepetition, setGroupRepetition]   = useState(1);   // current group pass
+  const [playbackSpeed, setPlaybackSpeed]       = useState(1.0);
+  const [isLoading, setIsLoading]               = useState(false);
 
   // Recording State
-  const [isRecording, setIsRecording] = useState(false);
-  const [recording, setRecording] = useState(null);
-  const [recordedUri, setRecordedUri] = useState(null);
+  const [isRecording, setIsRecording]           = useState(false);
+  const [recording, setRecording]               = useState(null);
+  const [recordedUri, setRecordedUri]           = useState(null);
   const [isPlaybackUserVoice, setIsPlaybackUserVoice] = useState(false);
-  const [userVoiceSound, setUserVoiceSound] = useState(null);
+  const [userVoiceSound, setUserVoiceSound]     = useState(null);
 
   // Playback Range State
-  const [ayahRange, setAyahRange] = useState({ start: 1, end: 7 });
+  const [ayahRange, setAyahRange]               = useState({ start: 1, end: 7 });
 
   const soundRef = useRef(null);
 
+  // ── Refs to avoid stale-closure bugs inside callbacks ──────────────────────
+  const currentAyahRef      = useRef(null);
+  const currentSurahRef     = useRef(null);
+  const currentQariRef      = useRef('husary');
+  const ayahRangeRef        = useRef({ start: 1, end: 7 });
+  const repetitionCountRef  = useRef(3);
+  const groupRepetitionRef  = useRef(1);
+  const playbackSpeedRef    = useRef(1.0);
+
+  useEffect(() => { currentAyahRef.current    = currentAyah;      }, [currentAyah]);
+  useEffect(() => { currentSurahRef.current   = currentSurah;     }, [currentSurah]);
+  useEffect(() => { currentQariRef.current    = currentQari;      }, [currentQari]);
+  useEffect(() => { ayahRangeRef.current      = ayahRange;        }, [ayahRange]);
+  useEffect(() => { repetitionCountRef.current = repetitionCount; }, [repetitionCount]);
+  useEffect(() => { groupRepetitionRef.current = groupRepetition; }, [groupRepetition]);
+  useEffect(() => { playbackSpeedRef.current  = playbackSpeed;    }, [playbackSpeed]);
+  // ───────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
-    // Enable audio on iOS (even when in silent mode) and Android
     Audio.setAudioModeAsync({
       allowsRecordingIOS: true,
       playsInSilentModeIOS: true,
       shouldRouteThroughEarpieceAndroid: false,
       staysActiveInBackground: true,
     });
-
     return () => {
-      // Cleanup sounds
       unloadSound();
       unloadUserVoice();
     };
@@ -44,38 +59,31 @@ export const AudioProvider = ({ children }) => {
 
   const unloadSound = async () => {
     if (soundRef.current) {
-      try {
-        await soundRef.current.unloadAsync();
-      } catch (e) {
-        console.log('Error unloading sound:', e);
-      }
+      try { await soundRef.current.unloadAsync(); } catch (e) {}
       soundRef.current = null;
     }
   };
 
   const unloadUserVoice = async () => {
     if (userVoiceSound) {
-      try {
-        await userVoiceSound.unloadAsync();
-      } catch (e) {
-        console.log('Error unloading user voice:', e);
-      }
+      try { await userVoiceSound.unloadAsync(); } catch (e) {}
       setUserVoiceSound(null);
     }
   };
 
-  // Play a specific Ayah
-  const playAyah = async (surahId, ayahNum, qariId = currentQari, forceStart = true) => {
+  // ── Play a single Ayah ─────────────────────────────────────────────────────
+  const playAyah = async (surahId, ayahNum, qariId = currentQariRef.current, forceStart = true) => {
     setIsLoading(true);
     await unloadSound();
-    
+
     setCurrentSurah(surahId);
     setCurrentAyah(ayahNum);
-    
+    currentAyahRef.current  = ayahNum;
+    currentSurahRef.current = surahId;
+
     const url = getAudioUrl(qariId, surahId, ayahNum);
-    
+
     try {
-      // Force playback through main speaker on iOS
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
         playsInSilentModeIOS: true,
@@ -85,8 +93,8 @@ export const AudioProvider = ({ children }) => {
 
       const { sound } = await Audio.Sound.createAsync(
         { uri: url },
-        { shouldPlay: forceStart, rate: playbackSpeed, shouldCorrectPitch: true },
-        onPlaybackStatusUpdate
+        { shouldPlay: forceStart, rate: playbackSpeedRef.current, shouldCorrectPitch: true },
+        onPlaybackStatusUpdate,
       );
       soundRef.current = sound;
       setIsPlaying(forceStart);
@@ -98,35 +106,43 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
-  // Track playback status updates to implement the repeat logic
-  const onPlaybackStatusUpdate = async (status) => {
+  // ── Play the whole group from start (resets group counter) ─────────────────
+  const playGroup = (surahId, rangeStart, qariId = currentQariRef.current) => {
+    groupRepetitionRef.current = 1;
+    setGroupRepetition(1);
+    playAyah(surahId, rangeStart, qariId, true);
+  };
+
+  // ── Called when an ayah finishes ──────────────────────────────────────────
+  const onPlaybackStatusUpdate = (status) => {
     if (!status) return;
-    
     if (status.didJustFinish && !status.isLooping) {
       handleAyahCompletion();
     }
   };
 
   const handleAyahCompletion = async () => {
-    // Check if we need to repeat the current Ayah again
-    if (currentRepetition < repetitionCount) {
-      setCurrentRepetition(prev => prev + 1);
-      if (soundRef.current) {
-        try {
-          await soundRef.current.setPositionAsync(0);
-          await soundRef.current.playAsync();
-        } catch (e) {
-          console.log('Error repeating ayah:', e);
-        }
-      }
+    const ayah        = currentAyahRef.current;
+    const range       = ayahRangeRef.current;
+    const surah       = currentSurahRef.current;
+    const qari        = currentQariRef.current;
+    const groupRep    = groupRepetitionRef.current;
+    const repCount    = repetitionCountRef.current;
+
+    if (ayah < range.end) {
+      // Advance to next ayah in range
+      playAyah(surah, ayah + 1, qari, true);
     } else {
-      // Moving to the next Ayah in range
-      setCurrentRepetition(1);
-      if (currentAyah < ayahRange.end) {
-        const nextAyah = currentAyah + 1;
-        playAyah(currentSurah, nextAyah, currentQari, true);
+      // End of range — check if we still have group repeats left
+      if (groupRep < repCount) {
+        const next = groupRep + 1;
+        groupRepetitionRef.current = next;
+        setGroupRepetition(next);
+        playAyah(surah, range.start, qari, true);
       } else {
-        // Range completed
+        // All done
+        groupRepetitionRef.current = 1;
+        setGroupRepetition(1);
         setIsPlaying(false);
         await unloadSound();
       }
@@ -138,9 +154,7 @@ export const AudioProvider = ({ children }) => {
       try {
         await soundRef.current.pauseAsync();
         setIsPlaying(false);
-      } catch (e) {
-        console.log('Error pausing sound:', e);
-      }
+      } catch (e) {}
     }
   };
 
@@ -149,52 +163,37 @@ export const AudioProvider = ({ children }) => {
       try {
         await soundRef.current.playAsync();
         setIsPlaying(true);
-      } catch (e) {
-        console.log('Error resuming sound:', e);
-      }
-    } else if (currentSurah && currentAyah) {
-      playAyah(currentSurah, currentAyah, currentQari, true);
+      } catch (e) {}
+    } else if (currentSurahRef.current && currentAyahRef.current) {
+      playAyah(currentSurahRef.current, currentAyahRef.current, currentQariRef.current, true);
     }
   };
 
   const setSpeed = async (speed) => {
     setPlaybackSpeed(speed);
+    playbackSpeedRef.current = speed;
     if (soundRef.current) {
-      try {
-        await soundRef.current.setRateAsync(speed, true);
-      } catch (e) {
-        console.log('Error setting playback speed:', e);
-      }
+      try { await soundRef.current.setRateAsync(speed, true); } catch (e) {}
     }
   };
 
-  // --- RECORDING CONTROLS ---
+  // ── Recording ─────────────────────────────────────────────────────────────
 
   const startRecording = async () => {
     try {
-      // Request permissions
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== 'granted') return false;
-
-      // Stop recitation if playing
-      if (isPlaying) {
-        await pauseSound();
-      }
-
+      if (isPlaying) await pauseSound();
       await unloadUserVoice();
-
-      // Configure recorder settings for high quality vocal recording
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
         shouldRouteThroughEarpieceAndroid: false,
         staysActiveInBackground: true,
       });
-
       const { recording: newRecording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
-
       setRecording(newRecording);
       setIsRecording(true);
       setRecordedUri(null);
@@ -210,21 +209,16 @@ export const AudioProvider = ({ children }) => {
     setIsRecording(false);
     try {
       const status = await recording.getStatusAsync();
-      if (status.canRecord) {
-        await recording.stopAndUnloadAsync();
-      }
+      if (status.canRecord) await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecordedUri(uri);
       setRecording(null);
-      
-      // Immediately reset audio mode to allow speaker playback
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
         playsInSilentModeIOS: true,
         shouldRouteThroughEarpieceAndroid: false,
         staysActiveInBackground: true,
       });
-      
       return uri;
     } catch (error) {
       console.error('Failed to stop recording', error);
@@ -243,24 +237,17 @@ export const AudioProvider = ({ children }) => {
     if (!recordedUri) return;
     setIsLoading(true);
     await unloadUserVoice();
-
     try {
-      // Force playback through main speaker on iOS
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
         playsInSilentModeIOS: true,
         shouldRouteThroughEarpieceAndroid: false,
         staysActiveInBackground: true,
       });
-
       const { sound } = await Audio.Sound.createAsync(
         { uri: recordedUri },
         { shouldPlay: true },
-        (status) => {
-          if (status.didJustFinish) {
-            setIsPlaybackUserVoice(false);
-          }
-        }
+        (status) => { if (status.didJustFinish) setIsPlaybackUserVoice(false); }
       );
       setUserVoiceSound(sound);
       setIsPlaybackUserVoice(true);
@@ -277,9 +264,7 @@ export const AudioProvider = ({ children }) => {
       try {
         await userVoiceSound.stopAsync();
         setIsPlaybackUserVoice(false);
-      } catch (e) {
-        console.log('Error stopping user voice:', e);
-      }
+      } catch (e) {}
     }
   };
 
@@ -293,21 +278,17 @@ export const AudioProvider = ({ children }) => {
         setCurrentQari,
         repetitionCount,
         setRepetitionCount,
-        currentRepetition,
-        setCurrentRepetition,
+        groupRepetition,
         playbackSpeed,
         setSpeed,
         isLoading,
         playAyah,
+        playGroup,
         pauseSound,
         resumeSound,
         unloadSound,
-        
-        // Ranges
         ayahRange,
         setAyahRange,
-
-        // Recording
         isRecording,
         recordedUri,
         startRecording,
