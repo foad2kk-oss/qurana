@@ -213,8 +213,9 @@ export default function MemorizerScreen({ navigation }) {
   };
 
   const currentPlayingAyahObj = activeAyahs[(currentAyah || 1) - 1] || activeAyahs[0];
-  // All ayahs in the selected range to display in the board
-  const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, ayahRange.end);
+  // All ayahs in the selected range (max 8) to display in the board
+  const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 7);
+  const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, clampedEnd);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: activeColors.background }]}>
@@ -449,10 +450,7 @@ export default function MemorizerScreen({ navigation }) {
                       })}
                     </View>
 
-                    {/* Translation */}
-                    <Text style={[styles.translationTextText, { color: activeColors.textSecondary, marginTop: 6 }]}>
-                      {ayahObj.translation}
-                    </Text>
+                    {/* Translation — hide English, show ayah number only */}
                   </View>
                 );
               })}
