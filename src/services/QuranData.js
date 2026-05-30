@@ -2,9 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const QARIS = [
   { id: 'husary',   name: 'الحصري',     folder: 'Husary_Muallim_128kbps' },
-  { id: 'minshawi', name: 'المنشاوي',   folder: 'Minshawi_Murattal_128kbps' },
+  { id: 'minshawi', name: 'المنشاوي',   folder: 'Minshawi_Murattal_64kbps' },
   { id: 'basit',    name: 'عبد الباسط', folder: 'Abdul_Basit_Murattal_192kbps' },
-  { id: 'ghamdi',   name: 'الغامدي',   folder: 'Ghamdi_40kbps' },
+  { id: 'ghamdi',   name: 'الغامدي',   folder: 'Saad_Al-Ghamadi_128kbps' },
 ];
 
 export const TAJWEED_RULES = {
@@ -38,9 +38,9 @@ export const SURAH_JUZ = {
 // Additional reciters
 export const ALL_QARIS = [
   { id: 'husary',   name: 'الشيخ محمود خليل الحصري',     subtitle: 'رواية حفص — معلم مرتّل',  folder: 'Husary_Muallim_128kbps',        icon: 'account-music' },
-  { id: 'minshawi', name: 'الشيخ محمد صديق المنشاوي',    subtitle: 'رواية حفص — مرتّل',       folder: 'Minshawi_Murattal_128kbps',     icon: 'account-music-outline' },
+  { id: 'minshawi', name: 'الشيخ محمد صديق المنشاوي',    subtitle: 'رواية حفص — مرتّل',       folder: 'Minshawi_Murattal_64kbps',      icon: 'account-music-outline' },
   { id: 'basit',    name: 'الشيخ عبد الباسط عبد الصمد',  subtitle: 'رواية حفص — مرتّل',       folder: 'Abdul_Basit_Murattal_192kbps',  icon: 'microphone-variant' },
-  { id: 'ghamdi',   name: 'الشيخ سعد الغامدي',           subtitle: 'رواية حفص — تلاوة عادية', folder: 'Ghamdi_40kbps',                 icon: 'microphone' },
+  { id: 'ghamdi',   name: 'الشيخ سعد الغامدي',           subtitle: 'رواية حفص — تلاوة عادية', folder: 'Saad_Al-Ghamadi_128kbps',       icon: 'microphone' },
 ];
 
 // 114 Surahs Metadata List
