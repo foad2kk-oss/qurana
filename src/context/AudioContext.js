@@ -34,9 +34,15 @@ export const AudioProvider = ({ children }) => {
   const queueRef          = useRef([]);
   const queueIndexRef     = useRef(0);
 
-  useEffect(() => { repCountRef.current     = repetitionCount; }, [repetitionCount]);
-  useEffect(() => { playbackSpeedRef.current = playbackSpeed;  }, [playbackSpeed]);
-  useEffect(() => { currentQariRef.current   = currentQari;    }, [currentQari]);
+  useEffect(() => { repCountRef.current      = repetitionCount; }, [repetitionCount]);
+  useEffect(() => { playbackSpeedRef.current = playbackSpeed;   }, [playbackSpeed]);
+  useEffect(() => { currentQariRef.current   = currentQari;     }, [currentQari]);
+
+  // Wrapper to update ref immediately (not waiting for useEffect)
+  const handleSetCurrentQari = (qariId) => {
+    currentQariRef.current = qariId;
+    setCurrentQari(qariId);
+  };
 
   // ── Setup ─────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -275,7 +281,7 @@ export const AudioProvider = ({ children }) => {
   return (
     <AudioContext.Provider value={{
       isPlaying, currentSurah, currentAyah,
-      currentQari, setCurrentQari,
+      currentQari, setCurrentQari: handleSetCurrentQari,
       repetitionCount, setRepetitionCount,
       groupRepetition,
       playbackSpeed, setSpeed,
