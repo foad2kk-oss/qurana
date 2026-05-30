@@ -73,6 +73,8 @@ export default function MemorizerScreen({ navigation }) {
 
   // Tafsir panel
   const [showTafsir, setShowTafsir] = useState(false);
+  const [ayahTafsir, setAyahTafsir] = useState({}); // { ayahNum: tafsirText }
+  const [isLoadingTafsir, setIsLoadingTafsir] = useState(false);
 
   // Recitation evaluation state
   const [evaluationResult, setEvaluationResult] = useState(null);
@@ -110,6 +112,26 @@ export default function MemorizerScreen({ navigation }) {
     fetchAyahs();
     unloadSound();
   }, [selectedSurahIndex]);
+
+  // Fetch per-ayah tafsir when panel opens
+  const fetchAyahTafsir = async () => {
+    if (isLoadingTafsir || Object.keys(ayahTafsir).length > 0) return;
+    setIsLoadingTafsir(true);
+    try {
+      const res = await fetch(
+        `https://api.alquran.cloud/v1/surah/${currentSurahObj.id}/ar.muyassar`
+      );
+      if (!res.ok) throw new Error('tafsir fetch failed');
+      const data = await res.json();
+      const map = {};
+      (data.data?.ayahs || []).forEach(a => { map[a.numberInSurah] = a.text; });
+      setAyahTafsir(map);
+    } catch (e) {
+      console.log('Tafsir fetch error:', e);
+    } finally {
+      setIsLoadingTafsir(false);
+    }
+  };
 
   // Duration Timer for recording
   useEffect(() => {
@@ -480,54 +502,71 @@ export default function MemorizerScreen({ navigation }) {
 
         {/* ── Tafsir collapsible panel ── */}
         <TouchableOpacity
-          onPress={() => setShowTafsir(v => !v)}
+          onPress={() => { setShowTafsir(v => !v); if (!showTafsir) fetchAyahTafsir(); }}
           style={[styles.tafsirToggleBtn, { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}
           activeOpacity={0.75}
         >
-          <MaterialCommunityIcons
-            name={showTafsir ? 'chevron-up' : 'chevron-down'}
-            size={18} color={COLORS.primary}
-          />
+          <MaterialCommunityIcons name={showTafsir ? 'chevron-up' : 'chevron-down'} size={18} color={COLORS.primary} />
           <Text style={[styles.tafsirToggleText, { color: COLORS.primary }]}>
-            ملخص تفسير سورة {currentSurahObj.name}
+            تفسير الآيات {ayahRange.start}–{clampedEnd}
           </Text>
           <MaterialCommunityIcons name="book-open-page-variant" size={16} color={COLORS.primary} />
         </TouchableOpacity>
 
-        {showTafsir && currentTafsir && (
+        {showTafsir && (
           <View style={[styles.tafsirPanel, { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
-            {/* Revelation badge + themes */}
-            <View style={styles.tafsirPanelHeader}>
-              <View style={[styles.tafsirRevBadge, {
-                backgroundColor: currentTafsir.revelation === 'مكية' ? '#D97706' : '#0D9488'
-              }]}>
-                <Text style={styles.tafsirRevText}>{currentTafsir.revelation}</Text>
+            {/* Surah info header */}
+            {currentTafsir && (
+              <View style={styles.tafsirPanelHeader}>
+                <View style={[styles.tafsirRevBadge, {
+                  backgroundColor: currentTafsir.revelation === 'مكية' ? '#D97706' : '#0D9488'
+                }]}>
+                  <Text style={styles.tafsirRevText}>{currentTafsir.revelation}</Text>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+                  {(currentTafsir.themes || []).map((theme, i) => (
+                    <View key={i} style={[styles.tafsirThemeChip, { backgroundColor: COLORS.primary + '18', borderColor: COLORS.primary + '40' }]}>
+                      <Text style={[styles.tafsirThemeText, { color: COLORS.primary }]}>{theme}</Text>
+                    </View>
+                  ))}
+                </ScrollView>
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
-                {(currentTafsir.themes || []).map((theme, i) => (
-                  <View key={i} style={[styles.tafsirThemeChip, { backgroundColor: COLORS.primary + '18', borderColor: COLORS.primary + '40' }]}>
-                    <Text style={[styles.tafsirThemeText, { color: COLORS.primary }]}>{theme}</Text>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
+            )}
 
-            {/* Summary */}
-            <Text style={[styles.tafsirSummaryText, { color: activeColors.text }]}>
-              {currentTafsir.summary}
-            </Text>
-
-            {/* Lessons */}
-            {(currentTafsir.lessons || []).length > 0 && (
-              <View style={[styles.tafsirLessonsBox, { backgroundColor: activeColors.surfaceAlt, borderColor: activeColors.border }]}>
-                <Text style={[styles.tafsirLessonsTitle, { color: COLORS.secondary }]}>الدروس والفوائد</Text>
-                {currentTafsir.lessons.map((lesson, i) => (
-                  <View key={i} style={styles.tafsirLessonRow}>
-                    <View style={[styles.tafsirLessonDot, { backgroundColor: COLORS.secondary }]} />
-                    <Text style={[styles.tafsirLessonText, { color: activeColors.textSecondary }]}>{lesson}</Text>
-                  </View>
-                ))}
+            {/* Per-ayah tafsir */}
+            {isLoadingTafsir ? (
+              <View style={{ alignItems: 'center', padding: 16 }}>
+                <ActivityIndicator color={COLORS.primary} />
+                <Text style={[{ color: activeColors.textMuted, marginTop: 8, fontSize: 13 }]}>جاري تحميل التفسير...</Text>
               </View>
+            ) : (
+              rangeAyahs.map((ayahObj, aIdx) => {
+                const ayahNum = ayahRange.start + aIdx;
+                const tafsirText = ayahTafsir[ayahNum];
+                return (
+                  <View key={ayahNum} style={[styles.ayahTafsirBlock, { borderColor: activeColors.border }]}>
+                    {/* Ayah text */}
+                    <View style={styles.ayahTafsirHeader}>
+                      <View style={[styles.ayahNumBadge, { backgroundColor: COLORS.primary }]}>
+                        <Text style={[styles.ayahNumBadgeText, { color: '#FFF' }]}>{ayahNum}</Text>
+                      </View>
+                      <Text style={[styles.ayahTafsirArabic, { color: activeColors.text }]} numberOfLines={2}>
+                        {ayahObj.text}
+                      </Text>
+                    </View>
+                    {/* Tafsir text */}
+                    {tafsirText ? (
+                      <Text style={[styles.ayahTafsirText, { color: activeColors.textSecondary }]}>
+                        {tafsirText}
+                      </Text>
+                    ) : (
+                      <Text style={[styles.ayahTafsirText, { color: activeColors.textMuted }]}>
+                        {currentTafsir?.summary || 'التفسير غير متاح حالياً'}
+                      </Text>
+                    )}
+                  </View>
+                );
+              })
             )}
           </View>
         )}
@@ -773,8 +812,61 @@ export default function MemorizerScreen({ navigation }) {
                   })}
                 </View>
 
-                {/* Tajweed errors detail panel */}
-                {evaluationResult.tajweedErrors && evaluationResult.tajweedErrors.length > 0 && (
+                {/* ── Tajweed errors panel (grouped by rule) ── */}
+                {evaluationResult.tajweedErrors && evaluationResult.tajweedErrors.length > 0 && (() => {
+                  // Group errors by rule
+                  const grouped = {};
+                  evaluationResult.tajweedErrors.forEach(err => {
+                    if (!grouped[err.rule]) grouped[err.rule] = [];
+                    grouped[err.rule].push(err.text);
+                  });
+                  const CORRECTION = {
+                    qalqalah: 'اهتزاز الصوت عند السكون — حروف: ق ط ب ج د',
+                    ghunnah:  'غنة الأنف بمقدار حركتين — على: نّ مّ',
+                    ikhfa:    'إخفاء النون جزئياً مع الغنة',
+                    idgham:   'إدغام النون في الحرف التالي',
+                    iqlab:    'قلب النون ميماً عند حرف الباء',
+                    izhar:    'إظهار التنوين/النون بوضوح بلا غنة',
+                    madd:     'مد الصوت — حركتان طبيعي أو أكثر فرعي',
+                    tafkheem: 'تغليظ الحرف حتى يمتلئ الفم بصداه',
+                  };
+                  return (
+                    <>
+                      <View style={[styles.divider, { backgroundColor: activeColors.border }]} />
+                      <Text style={[styles.tajweedErrorsTitle, { color: activeColors.text }]}>
+                        أخطاء التجويد المكتشفة
+                      </Text>
+                      {Object.entries(grouped).map(([ruleKey, words], i) => {
+                        const rule = TAJWEED_RULES[ruleKey];
+                        const ruleColor = rule ? (themeMode === 'dark' ? rule.darkColor : rule.color) : COLORS.secondary;
+                        return (
+                          <View key={i} style={[styles.tajweedGroupRow, { borderColor: ruleColor + '60', backgroundColor: ruleColor + '10' }]}>
+                            {/* Rule badge */}
+                            <View style={[styles.tajweedGroupBadge, { backgroundColor: ruleColor }]}>
+                              <Text style={styles.tajweedGroupBadgeText}>{rule?.name?.split('(')[0]?.trim() || ruleKey}</Text>
+                            </View>
+                            {/* Words with this rule error */}
+                            <View style={{ flex: 1 }}>
+                              <View style={styles.tajweedGroupWords}>
+                                {words.map((w, j) => (
+                                  <View key={j} style={[styles.tajweedWordChip, { backgroundColor: ruleColor + '25', borderColor: ruleColor + '60' }]}>
+                                    <Text style={[styles.tajweedWordChipText, { color: ruleColor }]}>{w}</Text>
+                                  </View>
+                                ))}
+                              </View>
+                              <Text style={[styles.tajweedGroupMsg, { color: activeColors.textSecondary }]}>
+                                {CORRECTION[ruleKey] || 'راجع حكم هذا الحرف في مدرسة التجويد'}
+                              </Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
+
+                {/* legacy placeholder for old tajweedErrors panel — keep for compat */}
+                {false && evaluationResult.tajweedErrors && evaluationResult.tajweedErrors.length > 0 && (
                   <>
                     <View style={[styles.divider, { backgroundColor: activeColors.border }]} />
                     <Text style={[styles.tajweedErrorsTitle, { color: activeColors.text }]}>
@@ -1107,6 +1199,70 @@ export default function MemorizerScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  tajweedGroupRow: {
+    flexDirection: 'row-reverse',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 10,
+    marginBottom: 8,
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  tajweedGroupBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  tajweedGroupBadgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  tajweedGroupWords: {
+    flexDirection: 'row-reverse',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 6,
+  },
+  tajweedWordChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  tajweedWordChipText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  tajweedGroupMsg: {
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'right',
+  },
+  ayahTafsirBlock: {
+    borderBottomWidth: 1,
+    paddingBottom: 12,
+    marginBottom: 12,
+  },
+  ayahTafsirHeader: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  ayahTafsirArabic: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: 'bold',
+    textAlign: 'right',
+    lineHeight: 24,
+  },
+  ayahTafsirText: {
+    fontSize: 13,
+    lineHeight: 22,
+    textAlign: 'right',
   },
   tafsirToggleBtn: {
     flexDirection: 'row-reverse',
