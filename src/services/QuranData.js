@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// edition = identifier on cdn.alquran.cloud/media/audio/ayah/{edition}/128/{s}:{v}
 export const QARIS = [
-  { id: 'husary',   name: 'الحصري',     folder: 'Husary_Muallim_128kbps' },
-  { id: 'minshawi', name: 'المنشاوي',   folder: 'Minshawi_Muallim_128kbps' },
-  { id: 'basit',    name: 'عبد الباسط', folder: 'Abdul_Basit_Murattal_192kbps' },
-  { id: 'ghamdi',   name: 'الغامدي',   folder: 'Ghamdi_40kbps' },
+  { id: 'husary',   name: 'الحصري',     edition: 'ar.husary' },
+  { id: 'minshawi', name: 'المنشاوي',   edition: 'ar.minshawi' },
+  { id: 'basit',    name: 'عبد الباسط', edition: 'ar.abdulbasitmurattal' },
+  { id: 'ghamdi',   name: 'الغامدي',   edition: 'ar.saadalghamdi' },
 ];
 
 export const TAJWEED_RULES = {
@@ -37,10 +38,10 @@ export const SURAH_JUZ = {
 
 // Additional reciters
 export const ALL_QARIS = [
-  { id: 'husary',   name: 'الشيخ محمود خليل الحصري',     subtitle: 'رواية حفص — معلم مرتّل',  folder: 'Husary_Muallim_128kbps',        icon: 'account-music' },
-  { id: 'minshawi', name: 'الشيخ محمد صديق المنشاوي',    subtitle: 'رواية حفص — معلم مرتّل',  folder: 'Minshawi_Muallim_128kbps',      icon: 'account-music-outline' },
-  { id: 'basit',    name: 'الشيخ عبد الباسط عبد الصمد',  subtitle: 'رواية حفص — مرتّل',       folder: 'Abdul_Basit_Murattal_192kbps',  icon: 'microphone-variant' },
-  { id: 'ghamdi',   name: 'الشيخ سعد الغامدي',           subtitle: 'رواية حفص — تلاوة عادية', folder: 'Ghamdi_40kbps',                 icon: 'microphone' },
+  { id: 'husary',   name: 'الشيخ محمود خليل الحصري',     subtitle: 'رواية حفص — معلم مرتّل',  edition: 'ar.husary',              icon: 'account-music' },
+  { id: 'minshawi', name: 'الشيخ محمد صديق المنشاوي',    subtitle: 'رواية حفص — معلم مرتّل',  edition: 'ar.minshawi',             icon: 'account-music-outline' },
+  { id: 'basit',    name: 'الشيخ عبد الباسط عبد الصمد',  subtitle: 'رواية حفص — مرتّل',       edition: 'ar.abdulbasitmurattal',   icon: 'microphone-variant' },
+  { id: 'ghamdi',   name: 'الشيخ سعد الغامدي',           subtitle: 'رواية حفص — تلاوة عادية', edition: 'ar.saadalghamdi',         icon: 'microphone' },
 ];
 
 // 114 Surahs Metadata List
@@ -561,7 +562,6 @@ export async function loadSurahAyahs(surahId) {
 
 export function getAudioUrl(qariId, surahNumber, ayahNumber) {
   const qari = QARIS.find(q => q.id === qariId) || QARIS[0];
-  const formattedSurah = String(surahNumber).padStart(3, '0');
-  const formattedAyah = String(ayahNumber).padStart(3, '0');
-  return `https://everyayah.com/data/${qari.folder}/${formattedSurah}${formattedAyah}.mp3`;
+  // Use alquran.cloud CDN — reliable CORS-friendly source for web
+  return `https://cdn.alquran.cloud/media/audio/ayah/${qari.edition}/128/${surahNumber}:${ayahNumber}`;
 }
