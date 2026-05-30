@@ -38,10 +38,17 @@ export const AudioProvider = ({ children }) => {
   useEffect(() => { playbackSpeedRef.current = playbackSpeed;   }, [playbackSpeed]);
   useEffect(() => { currentQariRef.current   = currentQari;     }, [currentQari]);
 
-  // Wrapper to update ref immediately (not waiting for useEffect)
-  const handleSetCurrentQari = (qariId) => {
+  // Wrapper: update ref immediately + reset playback so new qari takes effect on next Play
+  const handleSetCurrentQari = async (qariId) => {
     currentQariRef.current = qariId;
     setCurrentQari(qariId);
+    // Clear queue and unload old sound → next Play starts fresh with new qari
+    queueRef.current      = [];
+    queueIndexRef.current = 0;
+    await unloadSound();
+    setIsPlaying(false);
+    setCurrentAyah(null);
+    setCurrentSurah(null);
   };
 
   // ── Setup ─────────────────────────────────────────────────────────────────
