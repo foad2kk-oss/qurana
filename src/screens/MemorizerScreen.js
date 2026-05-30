@@ -18,6 +18,7 @@ import { AudioContext } from '../context/AudioContext';
 import { ProgressContext } from '../context/ProgressContext';
 import { ALL_SURAHS, TAJWEED_RULES, loadSurahAyahs, SURAH_JUZ, ALL_QARIS } from '../services/QuranData';
 import { TextInput } from 'react-native';
+import { getTafsir } from '../services/TafsirData';
 
 const SURAHS = ALL_SURAHS;
 import { evaluateRecitation, transcribeAudio, getMockCorrection } from '../services/SpeechService';
@@ -69,6 +70,9 @@ export default function MemorizerScreen({ navigation }) {
   // Surah filter state
   const [surahSearch, setSurahSearch] = useState('');
   const [selectedJuz, setSelectedJuz] = useState(0); // 0 = all
+
+  // Tafsir panel
+  const [showTafsir, setShowTafsir] = useState(false);
 
   // Recitation evaluation state
   const [evaluationResult, setEvaluationResult] = useState(null);
@@ -216,6 +220,12 @@ export default function MemorizerScreen({ navigation }) {
   // All ayahs in the selected range (max 8) to display in the board
   const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 7);
   const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, clampedEnd);
+
+  // Tafsir for current surah
+  const currentTafsir = getTafsir(
+    currentSurahObj.id, currentSurahObj.name,
+    currentSurahObj.englishName, currentSurahObj.totalAyahs, currentSurahObj.type
+  );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: activeColors.background }]}>
@@ -467,6 +477,60 @@ export default function MemorizerScreen({ navigation }) {
             </>
           )}
         </View>
+
+        {/* ── Tafsir collapsible panel ── */}
+        <TouchableOpacity
+          onPress={() => setShowTafsir(v => !v)}
+          style={[styles.tafsirToggleBtn, { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}
+          activeOpacity={0.75}
+        >
+          <MaterialCommunityIcons
+            name={showTafsir ? 'chevron-up' : 'chevron-down'}
+            size={18} color={COLORS.primary}
+          />
+          <Text style={[styles.tafsirToggleText, { color: COLORS.primary }]}>
+            ملخص تفسير سورة {currentSurahObj.name}
+          </Text>
+          <MaterialCommunityIcons name="book-open-page-variant" size={16} color={COLORS.primary} />
+        </TouchableOpacity>
+
+        {showTafsir && currentTafsir && (
+          <View style={[styles.tafsirPanel, { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
+            {/* Revelation badge + themes */}
+            <View style={styles.tafsirPanelHeader}>
+              <View style={[styles.tafsirRevBadge, {
+                backgroundColor: currentTafsir.revelation === 'مكية' ? '#D97706' : '#0D9488'
+              }]}>
+                <Text style={styles.tafsirRevText}>{currentTafsir.revelation}</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+                {(currentTafsir.themes || []).map((theme, i) => (
+                  <View key={i} style={[styles.tafsirThemeChip, { backgroundColor: COLORS.primary + '18', borderColor: COLORS.primary + '40' }]}>
+                    <Text style={[styles.tafsirThemeText, { color: COLORS.primary }]}>{theme}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Summary */}
+            <Text style={[styles.tafsirSummaryText, { color: activeColors.text }]}>
+              {currentTafsir.summary}
+            </Text>
+
+            {/* Lessons */}
+            {(currentTafsir.lessons || []).length > 0 && (
+              <View style={[styles.tafsirLessonsBox, { backgroundColor: activeColors.surfaceAlt, borderColor: activeColors.border }]}>
+                <Text style={[styles.tafsirLessonsTitle, { color: COLORS.secondary }]}>الدروس والفوائد</Text>
+                {currentTafsir.lessons.map((lesson, i) => (
+                  <View key={i} style={styles.tafsirLessonRow}>
+                    <View style={[styles.tafsirLessonDot, { backgroundColor: COLORS.secondary }]} />
+                    <Text style={[styles.tafsirLessonText, { color: activeColors.textSecondary }]}>{lesson}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Listen Mode Controls */}
         {activeTab === 'listen' && (
@@ -1043,6 +1107,76 @@ export default function MemorizerScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  tafsirToggleBtn: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 6,
+  },
+  tafsirToggleText: {
+    flex: 1,
+    textAlign: 'right',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  tafsirPanel: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 10,
+  },
+  tafsirPanelHeader: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  tafsirRevBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  tafsirRevText: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
+  tafsirThemeChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: 6,
+  },
+  tafsirThemeText: { fontSize: 11, fontWeight: '600' },
+  tafsirSummaryText: {
+    fontSize: 14,
+    lineHeight: 24,
+    textAlign: 'right',
+    marginBottom: 10,
+  },
+  tafsirLessonsBox: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 10,
+  },
+  tafsirLessonsTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    textAlign: 'right',
+    marginBottom: 8,
+  },
+  tafsirLessonRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 6,
+  },
+  tafsirLessonDot: {
+    width: 6, height: 6, borderRadius: 3, marginTop: 7, flexShrink: 0,
+  },
+  tafsirLessonText: {
+    flex: 1, fontSize: 13, lineHeight: 20, textAlign: 'right',
   },
   rangeHintBox: {
     flexDirection: 'row-reverse',
