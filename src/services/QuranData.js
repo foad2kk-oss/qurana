@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const QARIS = [
-  { id: 'husary', name: 'الشيخ الحصري (معلم)', englishName: 'Sheikh Al-Husary (Teacher)', folder: 'Husary_Muallim_128kbps' },
-  { id: 'minshawi', name: 'الشيخ المنشاوي (معلم)', englishName: 'Sheikh Al-Minshawi (Teacher)', folder: 'Minshawi_Muallim_128kbps' },
-  { id: 'alafasy', name: 'الشيخ مشاري العفاسي', englishName: 'Sheikh Mishary Alafasy', folder: 'Alafasy_128kbps' },
+  { id: 'husary',      name: 'الحصري',      folder: 'Husary_Muallim_128kbps' },
+  { id: 'minshawi',   name: 'المنشاوي',    folder: 'Minshawi_Muallim_128kbps' },
+  { id: 'basit',      name: 'عبد الباسط',  folder: 'Abdul_Basit_Murattal_128kbps' },
+  { id: 'ghamdi',     name: 'الغامدي',     folder: 'Ghamdi_40kbps' },
 ];
 
 export const TAJWEED_RULES = {
@@ -36,9 +37,10 @@ export const SURAH_JUZ = {
 
 // Additional reciters
 export const ALL_QARIS = [
-  { id: 'husary',   name: 'الشيخ محمود خليل الحصري',    subtitle: 'رواية حفص — معلم مرتّل',  folder: 'Husary_Muallim_128kbps',   icon: 'account-music' },
-  { id: 'minshawi', name: 'الشيخ محمد صديق المنشاوي',   subtitle: 'رواية حفص — معلم مرتّل',  folder: 'Minshawi_Muallim_128kbps', icon: 'account-music-outline' },
-  { id: 'alafasy',  name: 'الشيخ مشاري بن راشد العفاسي',subtitle: 'رواية حفص — تلاوة عادية', folder: 'Alafasy_128kbps',           icon: 'microphone-variant' },
+  { id: 'husary',   name: 'الشيخ محمود خليل الحصري',       subtitle: 'رواية حفص — معلم مرتّل',    folder: 'Husary_Muallim_128kbps',          icon: 'account-music' },
+  { id: 'minshawi', name: 'الشيخ محمد صديق المنشاوي',      subtitle: 'رواية حفص — معلم مرتّل',    folder: 'Minshawi_Muallim_128kbps',        icon: 'account-music-outline' },
+  { id: 'basit',    name: 'الشيخ عبد الباسط عبد الصمد',    subtitle: 'رواية حفص — مرتّل',         folder: 'Abdul_Basit_Murattal_128kbps',    icon: 'microphone-variant' },
+  { id: 'ghamdi',   name: 'الشيخ سعد الغامدي',             subtitle: 'رواية حفص — تلاوة عادية',   folder: 'Ghamdi_40kbps',                   icon: 'microphone' },
 ];
 
 // 114 Surahs Metadata List

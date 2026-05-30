@@ -1,7 +1,7 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, FlatList, Animated, Dimensions, SafeAreaView,
+  TextInput, FlatList, Animated, Dimensions, SafeAreaView, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -58,7 +58,7 @@ function SurahRow({ surah, isSelected, onPress, activeColors }) {
 }
 
 // ─── Tafsir content card ──────────────────────────────────────────────────────
-function TafsirCard({ tafsir, surah, activeColors }) {
+function TafsirCard({ tafsir, surah, activeColors, ayahMap, isLoadingAyah }) {
   const revBadge = REVELATION_BADGE[tafsir.revelation] || REVELATION_BADGE['مكية'];
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -115,19 +115,32 @@ function TafsirCard({ tafsir, surah, activeColors }) {
         <Text style={[styles.summaryText, { color: activeColors.text }]}>{tafsir.summary}</Text>
       </View>
 
-      {/* Lessons */}
-      {tafsir.lessons && tafsir.lessons.length > 0 && (
+      {/* Per-ayah tafsir — passed via props */}
+      {ayahMap && (
         <View style={[styles.lessonsCard, { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
           <View style={styles.sectionLabel}>
-            <MaterialCommunityIcons name="lightbulb-outline" size={16} color={COLORS.secondary} />
-            <Text style={[styles.sectionLabelText, { color: COLORS.secondary }]}>الدروس والفوائد</Text>
+            <MaterialCommunityIcons name="book-alphabet" size={16} color={COLORS.secondary} />
+            <Text style={[styles.sectionLabelText, { color: COLORS.secondary }]}>تفسير الآيات</Text>
           </View>
-          {tafsir.lessons.map((lesson, i) => (
-            <View key={i} style={styles.lessonRow}>
-              <View style={[styles.lessonDot, { backgroundColor: THEME_COLORS[i % THEME_COLORS.length] }]} />
-              <Text style={[styles.lessonText, { color: activeColors.text }]}>{lesson}</Text>
+          {isLoadingAyah ? (
+            <View style={{ alignItems: 'center', padding: 12 }}>
+              <ActivityIndicator color={COLORS.primary} />
+              <Text style={{ color: activeColors.textMuted, marginTop: 6, fontSize: 12 }}>جاري التحميل...</Text>
             </View>
-          ))}
+          ) : Object.keys(ayahMap).length === 0 ? (
+            <Text style={[styles.lessonText, { color: activeColors.textMuted }]}>
+              تفسير الآيات غير متاح حالياً
+            </Text>
+          ) : (
+            Object.entries(ayahMap).map(([num, text]) => (
+              <View key={num} style={[styles.lessonRow, { alignItems: 'flex-start', marginBottom: 12 }]}>
+                <View style={[styles.lessonDot, { backgroundColor: COLORS.primary, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', marginTop: 2 }]}>
+                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>{num}</Text>
+                </View>
+                <Text style={[styles.lessonText, { color: activeColors.text, lineHeight: 24 }]}>{text}</Text>
+              </View>
+            ))
+          )}
         </View>
       )}
     </Animated.View>
@@ -150,11 +163,33 @@ export default function TafsirScreen({ navigation, route }) {
       : null
   );
 
+  useEffect(() => {
+    if (initialSurah) fetchAyahTafsir(initialSurah.number);
+  }, []);
+  // Per-ayah tafsir from API
+  const [ayahTafsirMap, setAyahTafsirMap] = useState({});
+  const [isLoadingAyahTafsir, setIsLoadingAyahTafsir] = useState(false);
+
+  const fetchAyahTafsir = async (surahId) => {
+    if (ayahTafsirMap[surahId]) return; // cached
+    setIsLoadingAyahTafsir(true);
+    try {
+      const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahId}/ar.muyassar`);
+      if (!res.ok) throw new Error('fail');
+      const data = await res.json();
+      const map = {};
+      (data.data?.ayahs || []).forEach(a => { map[a.numberInSurah] = a.text; });
+      setAyahTafsirMap(prev => ({ ...prev, [surahId]: map }));
+    } catch (e) { console.log('ayah tafsir error', e); }
+    finally { setIsLoadingAyahTafsir(false); }
+  };
+
   const handleSelect = (surah) => {
     setSelectedSurah(surah);
     const t = getTafsir(surah.number, surah.name, surah.englishName, surah.totalAyahs, surah.type);
     setTafsir(t);
     setShowList(false);
+    fetchAyahTafsir(surah.number);
   };
 
   const filteredSurahs = SURAHS.filter(s => {
@@ -263,7 +298,13 @@ export default function TafsirScreen({ navigation, route }) {
               </Text>
             </TouchableOpacity>
 
-            <TafsirCard tafsir={tafsir} surah={selectedSurah} activeColors={activeColors} />
+            <TafsirCard
+              tafsir={tafsir}
+              surah={selectedSurah}
+              activeColors={activeColors}
+              ayahMap={ayahTafsirMap[selectedSurah?.number]}
+              isLoadingAyah={isLoadingAyahTafsir}
+            />
 
             <View style={{ height: 100 }} />
           </ScrollView>

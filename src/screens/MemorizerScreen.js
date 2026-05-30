@@ -279,7 +279,7 @@ export default function MemorizerScreen({ navigation }) {
           <View style={styles.selectorValueRow}>
             <MaterialCommunityIcons name="chevron-down" size={16} color={COLORS.primary} />
             <Text style={[styles.selectorValueText, { color: activeColors.text }]}>
-              {currentQari === 'husary' ? 'الحصري' : currentQari === 'minshawi' ? 'المنشاوي' : 'العفاسي'}
+              {ALL_QARIS.find(q => q.id === currentQari)?.name?.split(' ').slice(-1)[0] || currentQari}
             </Text>
           </View>
         </TouchableOpacity>

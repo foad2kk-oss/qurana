@@ -27,14 +27,16 @@ export const AudioProvider = ({ children }) => {
   const soundRef          = useRef(null);
   const playbackSpeedRef  = useRef(1.0);
   const repCountRef       = useRef(3);
+  const currentQariRef    = useRef('husary'); // always up-to-date qari
   // Each new sound gets a unique ID; stale callbacks check against it
   const activeSoundIdRef  = useRef(0);
   // Queue
   const queueRef          = useRef([]);
   const queueIndexRef     = useRef(0);
 
-  useEffect(() => { repCountRef.current    = repetitionCount; }, [repetitionCount]);
-  useEffect(() => { playbackSpeedRef.current = playbackSpeed; }, [playbackSpeed]);
+  useEffect(() => { repCountRef.current     = repetitionCount; }, [repetitionCount]);
+  useEffect(() => { playbackSpeedRef.current = playbackSpeed;  }, [playbackSpeed]);
+  useEffect(() => { currentQariRef.current   = currentQari;    }, [currentQari]);
 
   // ── Setup ─────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -126,28 +128,30 @@ export const AudioProvider = ({ children }) => {
   }, [advanceQueue]);
 
   // ── Public: play the whole group N times ──────────────────────────────────
-  const playGroup = useCallback((surahId, rangeStart, rangeEnd, qariId = currentQari) => {
+  const playGroup = useCallback((surahId, rangeStart, rangeEnd, qariId) => {
+    const qari = qariId || currentQariRef.current;
     const repCount = repCountRef.current;
     const queue = [];
     for (let pass = 1; pass <= repCount; pass++) {
       for (let ayah = rangeStart; ayah <= rangeEnd; ayah++) {
-        queue.push({ surahId, ayahNum: ayah, qariId, _groupPass: pass });
+        queue.push({ surahId, ayahNum: ayah, qariId: qari, _groupPass: pass });
       }
     }
     queueRef.current      = queue;
     queueIndexRef.current = 0;
     setGroupRepetition(1);
     if (queue.length > 0) _loadAndPlay(queue[0]);
-  }, [currentQari, _loadAndPlay]);
+  }, [_loadAndPlay]);
 
   // ── Public: play a single ayah (manual nav) ───────────────────────────────
-  const playAyah = useCallback(async (surahId, ayahNum, qariId = currentQari, forceStart = true) => {
-    const item = { surahId, ayahNum, qariId: qariId || currentQari, _groupPass: 1 };
+  const playAyah = useCallback(async (surahId, ayahNum, qariId, forceStart = true) => {
+    const qari = qariId || currentQariRef.current;
+    const item = { surahId, ayahNum, qariId: qari, _groupPass: 1 };
     queueRef.current      = [item];
     queueIndexRef.current = 0;
     setGroupRepetition(1);
     if (forceStart) _loadAndPlay(item);
-  }, [currentQari, _loadAndPlay]);
+  }, [_loadAndPlay]);
 
   // ── Pause / Resume ────────────────────────────────────────────────────────
   const pauseSound = async () => {
