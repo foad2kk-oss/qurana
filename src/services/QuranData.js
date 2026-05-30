@@ -1,24 +1,24 @@
-﻿import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const QARIS = [
-  { id: 'husary', name: 'Ø§Ù„Ø´ÙŠØ® Ø§Ù„Ø­ØµØ±ÙŠ (Ù…Ø¹Ù„Ù…)', englishName: 'Sheikh Al-Husary (Teacher)', folder: 'Husary_Muallim_128kbps' },
-  { id: 'minshawi', name: 'Ø§Ù„Ø´ÙŠØ® Ø§Ù„Ù…Ù†Ø´Ø§ÙˆÙŠ (Ù…Ø¹Ù„Ù…)', englishName: 'Sheikh Al-Minshawi (Teacher)', folder: 'Minshawi_Muallim_128kbps' },
-  { id: 'alafasy', name: 'Ø§Ù„Ø´ÙŠØ® Ù…Ø´Ø§Ø±ÙŠ Ø§Ù„Ø¹ÙØ§Ø³ÙŠ', englishName: 'Sheikh Mishary Alafasy', folder: 'Alafasy_128kbps' },
+  { id: 'husary', name: 'الشيخ الحصري (معلم)', englishName: 'Sheikh Al-Husary (Teacher)', folder: 'Husary_Muallim_128kbps' },
+  { id: 'minshawi', name: 'الشيخ المنشاوي (معلم)', englishName: 'Sheikh Al-Minshawi (Teacher)', folder: 'Minshawi_Muallim_128kbps' },
+  { id: 'alafasy', name: 'الشيخ مشاري العفاسي', englishName: 'Sheikh Mishary Alafasy', folder: 'Alafasy_128kbps' },
 ];
 
 export const TAJWEED_RULES = {
   none: { name: 'Normal', color: '#FFFFFF', darkColor: '#E2E8F0', description: 'Standard pronunciation' },
-  qalqalah: { name: 'Ù‚Ù„Ù‚Ù„Ø© (Qalqalah)', color: '#F59E0B', darkColor: '#FBBF24', description: 'Vibrating or echoing sound on letters (Ù‚ØŒ Ø·ØŒ Ø¨ØŒ Ø¬ØŒ Ø¯) when silent.' },
-  ghunnah: { name: 'ØºÙ†Ø© (Ghunnah)', color: '#10B981', darkColor: '#34D399', description: 'Nasalization sound of 2 beats on Meem and Noon with Shaddah.' },
-  ikhfa: { name: 'Ø¥Ø®ÙØ§Ø¡ (Ikhfa)', color: '#3B82F6', darkColor: '#60A5FA', description: 'Hiding the Noon Sakinah or Tanween when followed by specific letters.' },
-  idgham: { name: 'Ø¥Ø¯ØºØ§Ù… (Idgham)', color: '#8B5CF6', darkColor: '#A78BFA', description: 'Merging Noon Sakinah or Tanween into the next letter with or without Ghunnah.' },
-  iqlab: { name: 'Ø¥Ù‚Ù„Ø§Ø¨ (Iqlab)', color: '#EC4899', darkColor: '#F472B6', description: 'Converting Noon Sakinah or Tanween into a Meem when followed by Baa.' },
-  izhar: { name: 'Ø¥Ø¸Ù‡Ø§Ø± (Izhar)', color: '#14B8A6', darkColor: '#2DD4BF', description: 'Clear pronunciation of Noon Sakinah or Tanween before the six throat letters.' },
-  madd: { name: 'Ù…Ø¯ (Madd)', color: '#EF4444', darkColor: '#F87171', description: 'Prolongation of vowel sounds (Alif, Waw, Yaa) for 2 to 6 beats.' },
-  tafkheem: { name: 'ØªÙØ®ÙŠÙ… (Tafkheem)', color: '#06B6D4', darkColor: '#22D3EE', description: 'Heavy/thick pronunciation of specific letters.' }
+  qalqalah: { name: 'قلقلة (Qalqalah)', color: '#F59E0B', darkColor: '#FBBF24', description: 'Vibrating or echoing sound on letters (ق، ط، ب، ج، د) when silent.' },
+  ghunnah: { name: 'غنة (Ghunnah)', color: '#10B981', darkColor: '#34D399', description: 'Nasalization sound of 2 beats on Meem and Noon with Shaddah.' },
+  ikhfa: { name: 'إخفاء (Ikhfa)', color: '#3B82F6', darkColor: '#60A5FA', description: 'Hiding the Noon Sakinah or Tanween when followed by specific letters.' },
+  idgham: { name: 'إدغام (Idgham)', color: '#8B5CF6', darkColor: '#A78BFA', description: 'Merging Noon Sakinah or Tanween into the next letter with or without Ghunnah.' },
+  iqlab: { name: 'إقلاب (Iqlab)', color: '#EC4899', darkColor: '#F472B6', description: 'Converting Noon Sakinah or Tanween into a Meem when followed by Baa.' },
+  izhar: { name: 'إظهار (Izhar)', color: '#14B8A6', darkColor: '#2DD4BF', description: 'Clear pronunciation of Noon Sakinah or Tanween before the six throat letters.' },
+  madd: { name: 'مد (Madd)', color: '#EF4444', darkColor: '#F87171', description: 'Prolongation of vowel sounds (Alif, Waw, Yaa) for 2 to 6 beats.' },
+  tafkheem: { name: 'تفخيم (Tafkheem)', color: '#06B6D4', darkColor: '#22D3EE', description: 'Heavy/thick pronunciation of specific letters.' }
 };
 
-// Surah â†’ primary Juz mapping
+// Surah → primary Juz mapping
 export const SURAH_JUZ = {
   1:1,2:1,3:3,4:4,5:6,6:7,7:8,8:9,9:10,10:11,
   11:11,12:12,13:13,14:13,15:14,16:14,17:15,18:15,19:16,20:16,
@@ -36,134 +36,134 @@ export const SURAH_JUZ = {
 
 // Additional reciters
 export const ALL_QARIS = [
-  { id: 'husary',   name: 'Ø§Ù„Ø´ÙŠØ® Ù…Ø­Ù…ÙˆØ¯ Ø®Ù„ÙŠÙ„ Ø§Ù„Ø­ØµØ±ÙŠ',    subtitle: 'Ø±ÙˆØ§ÙŠØ© Ø­ÙØµ â€” Ù…Ø¹Ù„Ù… Ù…Ø±ØªÙ‘Ù„',  folder: 'Husary_Muallim_128kbps',   icon: 'account-music' },
-  { id: 'minshawi', name: 'Ø§Ù„Ø´ÙŠØ® Ù…Ø­Ù…Ø¯ ØµØ¯ÙŠÙ‚ Ø§Ù„Ù…Ù†Ø´Ø§ÙˆÙŠ',   subtitle: 'Ø±ÙˆØ§ÙŠØ© Ø­ÙØµ â€” Ù…Ø¹Ù„Ù… Ù…Ø±ØªÙ‘Ù„',  folder: 'Minshawi_Muallim_128kbps', icon: 'account-music-outline' },
-  { id: 'alafasy',  name: 'Ø§Ù„Ø´ÙŠØ® Ù…Ø´Ø§Ø±ÙŠ Ø¨Ù† Ø±Ø§Ø´Ø¯ Ø§Ù„Ø¹ÙØ§Ø³ÙŠ',subtitle: 'Ø±ÙˆØ§ÙŠØ© Ø­ÙØµ â€” ØªÙ„Ø§ÙˆØ© Ø¹Ø§Ø¯ÙŠØ©', folder: 'Alafasy_128kbps',           icon: 'microphone-variant' },
+  { id: 'husary',   name: 'الشيخ محمود خليل الحصري',    subtitle: 'رواية حفص — معلم مرتّل',  folder: 'Husary_Muallim_128kbps',   icon: 'account-music' },
+  { id: 'minshawi', name: 'الشيخ محمد صديق المنشاوي',   subtitle: 'رواية حفص — معلم مرتّل',  folder: 'Minshawi_Muallim_128kbps', icon: 'account-music-outline' },
+  { id: 'alafasy',  name: 'الشيخ مشاري بن راشد العفاسي',subtitle: 'رواية حفص — تلاوة عادية', folder: 'Alafasy_128kbps',           icon: 'microphone-variant' },
 ];
 
 // 114 Surahs Metadata List
 export const ALL_SURAHS = [
-  { id: 1, name: 'Ø§Ù„ÙØ§ØªØ­Ø©', englishName: 'Al-Fatihah', englishTranslation: 'The Opening', totalAyahs: 7, type: 'Meccan' },
-  { id: 2, name: 'Ø§Ù„Ø¨Ù‚Ø±Ø©', englishName: 'Al-Baqarah', englishTranslation: 'The Cow', totalAyahs: 286, type: 'Medinan' },
-  { id: 3, name: 'Ø¢Ù„ Ø¹Ù…Ø±Ø§Ù†', englishName: 'Ali \'Imran', englishTranslation: 'Family of Imran', totalAyahs: 200, type: 'Medinan' },
-  { id: 4, name: 'Ø§Ù„Ù†Ø³Ø§Ø¡', englishName: 'An-Nisa', englishTranslation: 'The Women', totalAyahs: 176, type: 'Medinan' },
-  { id: 5, name: 'Ø§Ù„Ù…Ø§Ø¦Ø¯Ø©', englishName: 'Al-Ma\'idah', englishTranslation: 'The Table Spread', totalAyahs: 120, type: 'Medinan' },
-  { id: 6, name: 'Ø§Ù„Ø£Ù†Ø¹Ø§Ù…', englishName: 'Al-An\'am', englishTranslation: 'The Cattle', totalAyahs: 165, type: 'Meccan' },
-  { id: 7, name: 'Ø§Ù„Ø£Ø¹Ø±Ø§Ù', englishName: 'Al-A\'raf', englishTranslation: 'The Heights', totalAyahs: 206, type: 'Meccan' },
-  { id: 8, name: 'Ø§Ù„Ø£Ù†ÙØ§Ù„', englishName: 'Al-Anfal', englishTranslation: 'The Spoils of War', totalAyahs: 75, type: 'Medinan' },
-  { id: 9, name: 'Ø§Ù„ØªÙˆØ¨Ø©', englishName: 'At-Tawbah', englishTranslation: 'The Repentance', totalAyahs: 129, type: 'Medinan' },
-  { id: 10, name: 'ÙŠÙˆÙ†Ø³', englishName: 'Yunus', englishTranslation: 'Jonah', totalAyahs: 109, type: 'Meccan' },
-  { id: 11, name: 'Ù‡ÙˆØ¯', englishName: 'Hud', englishTranslation: 'Hud', totalAyahs: 123, type: 'Meccan' },
-  { id: 12, name: 'ÙŠÙˆØ³Ù', englishName: 'Yusuf', englishTranslation: 'Joseph', totalAyahs: 111, type: 'Meccan' },
-  { id: 13, name: 'Ø§Ù„Ø±Ø¹Ø¯', englishName: 'Ar-Ra\'d', englishTranslation: 'The Thunder', totalAyahs: 43, type: 'Medinan' },
-  { id: 14, name: 'Ø¥Ø¨Ø±Ø§Ù‡ÙŠÙ…', englishName: 'Ibrahim', englishTranslation: 'Abraham', totalAyahs: 52, type: 'Meccan' },
-  { id: 15, name: 'Ø§Ù„Ø­Ø¬Ø±', englishName: 'Al-Hijr', englishTranslation: 'The Rocky Tract', totalAyahs: 99, type: 'Meccan' },
-  { id: 16, name: 'Ø§Ù„Ù†Ø­Ù„', englishName: 'An-Nahl', englishTranslation: 'The Bee', totalAyahs: 128, type: 'Meccan' },
-  { id: 17, name: 'Ø§Ù„Ø¥Ø³Ø±Ø§Ø¡', englishName: 'Al-Isra', englishTranslation: 'The Night Journey', totalAyahs: 111, type: 'Meccan' },
-  { id: 18, name: 'Ø§Ù„ÙƒÙ‡Ù', englishName: 'Al-Kahf', englishTranslation: 'The Cave', totalAyahs: 110, type: 'Meccan' },
-  { id: 19, name: 'Ù…Ø±ÙŠÙ…', englishName: 'Maryam', englishTranslation: 'Mary', totalAyahs: 98, type: 'Meccan' },
-  { id: 20, name: 'Ø·Ù‡', englishName: 'Taha', englishTranslation: 'Ta-Ha', totalAyahs: 135, type: 'Meccan' },
-  { id: 21, name: 'Ø§Ù„Ø£Ù†Ø¨ÙŠØ§Ø¡', englishName: 'Al-Anbiya', englishTranslation: 'The Prophets', totalAyahs: 112, type: 'Meccan' },
-  { id: 22, name: 'Ø§Ù„Ø­Ø¬', englishName: 'Al-Hajj', englishTranslation: 'The Pilgrimage', totalAyahs: 78, type: 'Medinan' },
-  { id: 23, name: 'Ø§Ù„Ù…Ø¤Ù…Ù†ÙˆÙ†', englishName: 'Al-Mu\'minun', englishTranslation: 'The Believers', totalAyahs: 118, type: 'Meccan' },
-  { id: 24, name: 'Ø§Ù„Ù†ÙˆØ±', englishName: 'An-Nur', englishTranslation: 'The Light', totalAyahs: 64, type: 'Medinan' },
-  { id: 25, name: 'Ø§Ù„ÙØ±Ù‚Ø§Ù†', englishName: 'Al-Furqan', englishTranslation: 'The Criterion', totalAyahs: 77, type: 'Meccan' },
-  { id: 26, name: 'Ø§Ù„Ø´Ø¹Ø±Ø§Ø¡', englishName: 'Ash-Shu\'ara', englishTranslation: 'The Poets', totalAyahs: 227, type: 'Meccan' },
-  { id: 27, name: 'Ø§Ù„Ù†Ù…Ù„', englishName: 'An-Naml', englishTranslation: 'The Ant', totalAyahs: 93, type: 'Meccan' },
-  { id: 28, name: 'Ø§Ù„Ù‚ØµØµ', englishName: 'Al-Qasas', englishTranslation: 'The Stories', totalAyahs: 88, type: 'Meccan' },
-  { id: 29, name: 'Ø§Ù„Ø¹Ù†ÙƒØ¨ÙˆØª', englishName: 'Al-Ankabut', englishTranslation: 'The Spider', totalAyahs: 69, type: 'Meccan' },
-  { id: 30, name: 'Ø§Ù„Ø±ÙˆÙ…', englishName: 'Ar-Rum', englishTranslation: 'The Romans', totalAyahs: 60, type: 'Meccan' },
-  { id: 31, name: 'Ù„Ù‚Ù…Ø§Ù†', englishName: 'Luqman', englishTranslation: 'Luqman', totalAyahs: 34, type: 'Meccan' },
-  { id: 32, name: 'Ø§Ù„Ø³Ø¬Ø¯Ø©', englishName: 'As-Sajdah', englishTranslation: 'The Prostration', totalAyahs: 30, type: 'Meccan' },
-  { id: 33, name: 'Ø§Ù„Ø£Ø­Ø²Ø§Ø¨', englishName: 'Al-Ahzab', englishTranslation: 'The Combined Forces', totalAyahs: 73, type: 'Medinan' },
-  { id: 34, name: 'Ø³Ø¨Ø£', englishName: 'Saba', englishTranslation: 'Sheba', totalAyahs: 54, type: 'Meccan' },
-  { id: 35, name: 'ÙØ§Ø·Ø±', englishName: 'Fatir', englishTranslation: 'Originator', totalAyahs: 45, type: 'Meccan' },
-  { id: 36, name: 'ÙŠØ³', englishName: 'Ya-Sin', englishTranslation: 'Ya Sin', totalAyahs: 83, type: 'Meccan' },
-  { id: 37, name: 'Ø§Ù„ØµØ§ÙØ§Øª', englishName: 'As-Saffat', englishTranslation: 'Those who set the Ranks', totalAyahs: 182, type: 'Meccan' },
-  { id: 38, name: 'Øµ', englishName: 'Sad', englishTranslation: 'The Letter Sad', totalAyahs: 88, type: 'Meccan' },
-  { id: 39, name: 'Ø§Ù„Ø²Ù…Ø±', englishName: 'Az-Zumar', englishTranslation: 'The Troops', totalAyahs: 75, type: 'Meccan' },
-  { id: 40, name: 'ØºØ§ÙØ±', englishName: 'Ghafir', englishTranslation: 'The Forgiver', totalAyahs: 85, type: 'Meccan' },
-  { id: 41, name: 'ÙØµÙ„Øª', englishName: 'Fussilat', englishTranslation: 'Explained in Detail', totalAyahs: 54, type: 'Meccan' },
-  { id: 42, name: 'Ø§Ù„Ø´ÙˆØ±Ù‰', englishName: 'Ash-Shura', englishTranslation: 'The Consultation', totalAyahs: 53, type: 'Meccan' },
-  { id: 43, name: 'Ø§Ù„Ø²Ø®Ø±Ù', englishName: 'Az-Zukhruf', englishTranslation: 'The Ornaments of Gold', totalAyahs: 89, type: 'Meccan' },
-  { id: 44, name: 'Ø§Ù„Ø¯Ø®Ø§Ù†', englishName: 'Ad-Dukhan', englishTranslation: 'The Smoke', totalAyahs: 59, type: 'Meccan' },
-  { id: 45, name: 'Ø§Ù„Ø¬Ø§Ø«ÙŠØ©', englishName: 'Al-Jathiyah', englishTranslation: 'The Crouching', totalAyahs: 37, type: 'Meccan' },
-  { id: 46, name: 'Ø§Ù„Ø£Ø­Ù‚Ø§Ù', englishName: 'Al-Ahqaf', englishTranslation: 'The Wind-Curved Sandhills', totalAyahs: 35, type: 'Meccan' },
-  { id: 47, name: 'Ù…Ø­Ù…Ø¯', englishName: 'Muhammad', englishTranslation: 'Muhammad', totalAyahs: 38, type: 'Medinan' },
-  { id: 48, name: 'Ø§Ù„ÙØªØ­', englishName: 'Al-Fath', englishTranslation: 'The Victory', totalAyahs: 29, type: 'Medinan' },
-  { id: 49, name: 'Ø§Ù„Ø­Ø¬Ø±Ø§Øª', englishName: 'Al-Hujurat', englishTranslation: 'The Rooms', totalAyahs: 18, type: 'Medinan' },
-  { id: 50, name: 'Ù‚', englishName: 'Qaf', englishTranslation: 'The Letter Qaf', totalAyahs: 45, type: 'Meccan' },
-  { id: 51, name: 'Ø§Ù„Ø°Ø§Ø±ÙŠØ§Øª', englishName: 'Adh-Dhariyat', englishTranslation: 'The Winnowing Winds', totalAyahs: 60, type: 'Meccan' },
-  { id: 52, name: 'Ø§Ù„Ø·ÙˆØ±', englishName: 'At-Tur', englishTranslation: 'The Mount', totalAyahs: 49, type: 'Meccan' },
-  { id: 53, name: 'Ø§Ù„Ù†Ø¬Ù…', englishName: 'An-Najm', englishTranslation: 'The Star', totalAyahs: 62, type: 'Meccan' },
-  { id: 54, name: 'Ø§Ù„Ù‚Ù…Ø±', englishName: 'Al-Qamar', englishTranslation: 'The Moon', totalAyahs: 55, type: 'Meccan' },
-  { id: 55, name: 'Ø§Ù„Ø±Ø­Ù…Ù†', englishName: 'Ar-Rahman', englishTranslation: 'The Beneficent', totalAyahs: 78, type: 'Medinan' },
-  { id: 56, name: 'Ø§Ù„ÙˆØ§Ù‚Ø¹Ø©', englishName: 'Al-Waqi\'ah', englishTranslation: 'The Inevitable', totalAyahs: 96, type: 'Meccan' },
-  { id: 57, name: 'Ø§Ù„Ø­Ø¯ÙŠØ¯', englishName: 'Al-Hadid', englishTranslation: 'The Iron', totalAyahs: 29, type: 'Medinan' },
-  { id: 58, name: 'Ø§Ù„Ù…Ø¬Ø§Ø¯Ù„Ø©', englishName: 'Al-Mujadilah', englishTranslation: 'The Pleading Woman', totalAyahs: 22, type: 'Medinan' },
-  { id: 59, name: 'Ø§Ù„Ø­Ø´Ø±', englishName: 'Al-Hashr', englishTranslation: 'The Exile', totalAyahs: 24, type: 'Medinan' },
-  { id: 60, name: 'Ø§Ù„Ù…Ù…ØªØ­Ù†Ø©', englishName: 'Al-Mumtahanah', englishTranslation: 'She that is to be examined', totalAyahs: 13, type: 'Medinan' },
-  { id: 61, name: 'Ø§Ù„ØµÙ', englishName: 'As-Saff', englishTranslation: 'The Ranks', totalAyahs: 14, type: 'Medinan' },
-  { id: 62, name: 'Ø§Ù„Ø¬Ù…Ø¹Ø©', englishName: 'Al-Jumu\'ah', englishTranslation: 'The Congregation', totalAyahs: 11, type: 'Medinan' },
-  { id: 63, name: 'Ø§Ù„Ù…Ù†Ø§ÙÙ‚ÙˆÙ†', englishName: 'Al-Munafiqun', englishTranslation: 'The Hypocrites', totalAyahs: 11, type: 'Medinan' },
-  { id: 64, name: 'Ø§Ù„ØªØºØ§Ø¨Ù†', englishName: 'At-Taghabun', englishTranslation: 'Mutual Disillusion', totalAyahs: 18, type: 'Medinan' },
-  { id: 65, name: 'Ø§Ù„Ø·Ù„Ø§Ù‚', englishName: 'At-Talaq', englishTranslation: 'The Divorce', totalAyahs: 12, type: 'Medinan' },
-  { id: 66, name: 'Ø§Ù„ØªØ­Ø±ÙŠÙ…', englishName: 'At-Tahrim', englishTranslation: 'The Banning', totalAyahs: 12, type: 'Medinan' },
-  { id: 67, name: 'Ø§Ù„Ù…Ù„Ùƒ', englishName: 'Al-Mulk', englishTranslation: 'The Sovereignty', totalAyahs: 30, type: 'Meccan' },
-  { id: 68, name: 'Ø§Ù„Ù‚Ù„Ù…', englishName: 'Al-Qalam', englishTranslation: 'The Pen', totalAyahs: 52, type: 'Meccan' },
-  { id: 69, name: 'Ø§Ù„Ø­Ø§Ù‚Ø©', englishName: 'Al-Haqqah', englishTranslation: 'The Reality', totalAyahs: 52, type: 'Meccan' },
-  { id: 70, name: 'Ø§Ù„Ù…Ø¹Ø§Ø±Ø¬', englishName: 'Al-Ma\'arij', englishTranslation: 'The Ascending Stairways', totalAyahs: 44, type: 'Meccan' },
-  { id: 71, name: 'Ù†ÙˆØ­', englishName: 'Nuh', englishTranslation: 'Noah', totalAyahs: 28, type: 'Meccan' },
-  { id: 72, name: 'Ø§Ù„Ø¬Ù†', englishName: 'Al-Jinn', englishTranslation: 'The Jinn', totalAyahs: 28, type: 'Meccan' },
-  { id: 73, name: 'Ø§Ù„Ù…Ø²Ù…Ù„', englishName: 'Al-Muzzammil', englishTranslation: 'The Enshrouded One', totalAyahs: 20, type: 'Meccan' },
-  { id: 74, name: 'Ø§Ù„Ù…Ø¯Ø«Ø±', englishName: 'Al-Muddaththir', englishTranslation: 'The Cloaked One', totalAyahs: 56, type: 'Meccan' },
-  { id: 75, name: 'Ø§Ù„Ù‚ÙŠØ§Ù…Ø©', englishName: 'Al-Qiyamah', englishTranslation: 'The Rising of the Dead', totalAyahs: 40, type: 'Meccan' },
-  { id: 76, name: 'Ø§Ù„Ø¥Ù†Ø³Ø§Ù†', englishName: 'Al-Insan', englishTranslation: 'Man', totalAyahs: 31, type: 'Medinan' },
-  { id: 77, name: 'Ø§Ù„Ù…Ø±Ø³Ù„Ø§Øª', englishName: 'Al-Mursalat', englishTranslation: 'The Emissaries', totalAyahs: 50, type: 'Meccan' },
-  { id: 78, name: 'Ø§Ù„Ù†Ø¨Ø£', englishName: 'An-Naba', englishTranslation: 'The Tidings', totalAyahs: 40, type: 'Meccan' },
-  { id: 79, name: 'Ø§Ù„Ù†Ø§Ø²Ø¹Ø§Øª', englishName: 'An-Nazi\'at', englishTranslation: 'Those who drag forth', totalAyahs: 46, type: 'Meccan' },
-  { id: 80, name: 'Ø¹Ø¨Ø³', englishName: 'Abasa', englishTranslation: 'He Frowned', totalAyahs: 42, type: 'Meccan' },
-  { id: 81, name: 'Ø§Ù„ØªÙƒÙˆÙŠØ±', englishName: 'At-Takwir', englishTranslation: 'The Overthrowing', totalAyahs: 29, type: 'Meccan' },
-  { id: 82, name: 'Ø§Ù„Ø§Ù†ÙØ·Ø§Ø±', englishName: 'Al-Infitar', englishTranslation: 'The Cleaving', totalAyahs: 19, type: 'Meccan' },
-  { id: 83, name: 'Ø§Ù„Ù…Ø·ÙÙÙŠÙ†', englishName: 'Al-Mutaffifin', englishTranslation: 'Defrauding', totalAyahs: 36, type: 'Meccan' },
-  { id: 84, name: 'Ø§Ù„Ø§Ù†Ø´Ù‚Ø§Ù‚', englishName: 'Al-Inshiqaq', englishTranslation: 'The Sundering', totalAyahs: 25, type: 'Meccan' },
-  { id: 85, name: 'Ø§Ù„Ø¨Ø±ÙˆØ¬', englishName: 'Al-Buruj', englishTranslation: 'The Mansions of the Stars', totalAyahs: 22, type: 'Meccan' },
-  { id: 86, name: 'Ø§Ù„Ø·Ø§Ø±Ù‚', englishName: 'At-Tariq', englishTranslation: 'The Morning Star', totalAyahs: 17, type: 'Meccan' },
-  { id: 87, name: 'Ø§Ù„Ø£Ø¹Ù„Ù‰', englishName: 'Al-A\'la', englishTranslation: 'The Most High', totalAyahs: 19, type: 'Meccan' },
-  { id: 88, name: 'Ø§Ù„ØºØ§Ø´ÙŠØ©', englishName: 'Al-Ghashiyah', englishTranslation: 'The Overwhelming', totalAyahs: 26, type: 'Meccan' },
-  { id: 89, name: 'Ø§Ù„ÙØ¬Ø±', englishName: 'Al-Fajr', englishTranslation: 'The Dawn', totalAyahs: 30, type: 'Meccan' },
-  { id: 90, name: 'Ø§Ù„Ø¨Ù„Ø¯', englishName: 'Al-Balad', englishTranslation: 'The City', totalAyahs: 20, type: 'Meccan' },
-  { id: 91, name: 'Ø§Ù„Ø´Ù…Ø³', englishName: 'Ash-Shams', englishTranslation: 'The Sun', totalAyahs: 15, type: 'Meccan' },
-  { id: 92, name: 'Ø§Ù„Ù„ÙŠÙ„', englishName: 'Al-Layl', englishTranslation: 'The Night', totalAyahs: 21, type: 'Meccan' },
-  { id: 93, name: 'Ø§Ù„Ø¶Ø­Ù‰', englishName: 'Ad-Duha', englishTranslation: 'The Morning Hours', totalAyahs: 11, type: 'Meccan' },
-  { id: 94, name: 'Ø§Ù„Ø´Ø±Ø­', englishName: 'Ash-Sharh', englishTranslation: 'The Consolation', totalAyahs: 8, type: 'Meccan' },
-  { id: 95, name: 'Ø§Ù„ØªÙŠÙ†', englishName: 'At-Tin', englishTranslation: 'The Fig', totalAyahs: 8, type: 'Meccan' },
-  { id: 96, name: 'Ø§Ù„Ø¹Ù„Ù‚', englishName: 'Al-Alaq', englishTranslation: 'The Clot', totalAyahs: 19, type: 'Meccan' },
-  { id: 97, name: 'Ø§Ù„Ù‚Ø¯Ø±', englishName: 'Al-Qadr', englishTranslation: 'The Power', totalAyahs: 5, type: 'Meccan' },
-  { id: 98, name: 'Ø§Ù„Ø¨ÙŠÙ†Ø©', englishName: 'Al-Bayyinah', englishTranslation: 'The Clear Proof', totalAyahs: 8, type: 'Medinan' },
-  { id: 99, name: 'Ø§Ù„Ø²Ù„Ø²Ù„Ø©', englishName: 'Az-Zalzalah', englishTranslation: 'The Earthquake', totalAyahs: 8, type: 'Medinan' },
-  { id: 100, name: 'Ø§Ù„Ø¹Ø§Ø¯ÙŠØ§Øª', englishName: 'Al-Adiyat', englishTranslation: 'The Chargers', totalAyahs: 11, type: 'Meccan' },
-  { id: 101, name: 'Ø§Ù„Ù‚Ø§Ø±Ø¹Ø©', englishName: 'Al-Qari\'ah', englishTranslation: 'The Calamity', totalAyahs: 11, type: 'Meccan' },
-  { id: 102, name: 'Ø§Ù„ØªÙƒØ§Ø«Ø±', englishName: 'At-Takathur', englishTranslation: 'Competition in Increase', totalAyahs: 8, type: 'Meccan' },
-  { id: 103, name: 'Ø§Ù„Ø¹ØµØ±', englishName: 'Al-Asr', englishTranslation: 'The Declining Day', totalAyahs: 3, type: 'Meccan' },
-  { id: 104, name: 'Ø§Ù„Ù‡Ù…Ø²Ø©', englishName: 'Al-Humazah', englishTranslation: 'The Slanderer', totalAyahs: 9, type: 'Meccan' },
-  { id: 105, name: 'Ø§Ù„ÙÙŠÙ„', englishName: 'Al-Fil', englishTranslation: 'The Elephant', totalAyahs: 5, type: 'Meccan' },
-  { id: 106, name: 'Ù‚Ø±ÙŠØ´', englishName: 'Quraysh', englishTranslation: 'Quraysh', totalAyahs: 4, type: 'Meccan' },
-  { id: 107, name: 'Ø§Ù„Ù…Ø§Ø¹ÙˆÙ†', englishName: 'Al-Ma\'un', englishTranslation: 'Neighborly Assistance', totalAyahs: 7, type: 'Meccan' },
-  { id: 108, name: 'Ø§Ù„ÙƒÙˆØ«Ø±', englishName: 'Al-Kawthar', englishTranslation: 'The Abundance', totalAyahs: 3, type: 'Meccan' },
-  { id: 109, name: 'Ø§Ù„ÙƒØ§ÙØ±ÙˆÙ†', englishName: 'Al-Kafirun', englishTranslation: 'The Disbelievers', totalAyahs: 6, type: 'Meccan' },
-  { id: 110, name: 'Ø§Ù„Ù†ØµØ±', englishName: 'An-Nasr', englishTranslation: 'Divine Support', totalAyahs: 3, type: 'Medinan' },
-  { id: 111, name: 'Ø§Ù„Ù…Ø³Ø¯', englishName: 'Al-Masad', englishTranslation: 'Palm Fibre', totalAyahs: 5, type: 'Meccan' },
-  { id: 112, name: 'Ø§Ù„Ø¥Ø®Ù„Ø§Øµ', englishName: 'Al-Ikhlas', englishTranslation: 'The Sincerity', totalAyahs: 4, type: 'Meccan' },
-  { id: 113, name: 'Ø§Ù„ÙÙ„Ù‚', englishName: 'Al-Falaq', englishTranslation: 'The Daybreak', totalAyahs: 5, type: 'Meccan' },
-  { id: 114, name: 'Ø§Ù„Ù†Ø§Ø³', englishName: 'An-Nas', englishTranslation: 'Mankind', totalAyahs: 6, type: 'Meccan' }
+  { id: 1, name: 'الفاتحة', englishName: 'Al-Fatihah', englishTranslation: 'The Opening', totalAyahs: 7, type: 'Meccan' },
+  { id: 2, name: 'البقرة', englishName: 'Al-Baqarah', englishTranslation: 'The Cow', totalAyahs: 286, type: 'Medinan' },
+  { id: 3, name: 'آل عمران', englishName: 'Ali \'Imran', englishTranslation: 'Family of Imran', totalAyahs: 200, type: 'Medinan' },
+  { id: 4, name: 'النساء', englishName: 'An-Nisa', englishTranslation: 'The Women', totalAyahs: 176, type: 'Medinan' },
+  { id: 5, name: 'المائدة', englishName: 'Al-Ma\'idah', englishTranslation: 'The Table Spread', totalAyahs: 120, type: 'Medinan' },
+  { id: 6, name: 'الأنعام', englishName: 'Al-An\'am', englishTranslation: 'The Cattle', totalAyahs: 165, type: 'Meccan' },
+  { id: 7, name: 'الأعراف', englishName: 'Al-A\'raf', englishTranslation: 'The Heights', totalAyahs: 206, type: 'Meccan' },
+  { id: 8, name: 'الأنفال', englishName: 'Al-Anfal', englishTranslation: 'The Spoils of War', totalAyahs: 75, type: 'Medinan' },
+  { id: 9, name: 'التوبة', englishName: 'At-Tawbah', englishTranslation: 'The Repentance', totalAyahs: 129, type: 'Medinan' },
+  { id: 10, name: 'يونس', englishName: 'Yunus', englishTranslation: 'Jonah', totalAyahs: 109, type: 'Meccan' },
+  { id: 11, name: 'هود', englishName: 'Hud', englishTranslation: 'Hud', totalAyahs: 123, type: 'Meccan' },
+  { id: 12, name: 'يوسف', englishName: 'Yusuf', englishTranslation: 'Joseph', totalAyahs: 111, type: 'Meccan' },
+  { id: 13, name: 'الرعد', englishName: 'Ar-Ra\'d', englishTranslation: 'The Thunder', totalAyahs: 43, type: 'Medinan' },
+  { id: 14, name: 'إبراهيم', englishName: 'Ibrahim', englishTranslation: 'Abraham', totalAyahs: 52, type: 'Meccan' },
+  { id: 15, name: 'الحجر', englishName: 'Al-Hijr', englishTranslation: 'The Rocky Tract', totalAyahs: 99, type: 'Meccan' },
+  { id: 16, name: 'النحل', englishName: 'An-Nahl', englishTranslation: 'The Bee', totalAyahs: 128, type: 'Meccan' },
+  { id: 17, name: 'الإسراء', englishName: 'Al-Isra', englishTranslation: 'The Night Journey', totalAyahs: 111, type: 'Meccan' },
+  { id: 18, name: 'الكهف', englishName: 'Al-Kahf', englishTranslation: 'The Cave', totalAyahs: 110, type: 'Meccan' },
+  { id: 19, name: 'مريم', englishName: 'Maryam', englishTranslation: 'Mary', totalAyahs: 98, type: 'Meccan' },
+  { id: 20, name: 'طه', englishName: 'Taha', englishTranslation: 'Ta-Ha', totalAyahs: 135, type: 'Meccan' },
+  { id: 21, name: 'الأنبياء', englishName: 'Al-Anbiya', englishTranslation: 'The Prophets', totalAyahs: 112, type: 'Meccan' },
+  { id: 22, name: 'الحج', englishName: 'Al-Hajj', englishTranslation: 'The Pilgrimage', totalAyahs: 78, type: 'Medinan' },
+  { id: 23, name: 'المؤمنون', englishName: 'Al-Mu\'minun', englishTranslation: 'The Believers', totalAyahs: 118, type: 'Meccan' },
+  { id: 24, name: 'النور', englishName: 'An-Nur', englishTranslation: 'The Light', totalAyahs: 64, type: 'Medinan' },
+  { id: 25, name: 'الفرقان', englishName: 'Al-Furqan', englishTranslation: 'The Criterion', totalAyahs: 77, type: 'Meccan' },
+  { id: 26, name: 'الشعراء', englishName: 'Ash-Shu\'ara', englishTranslation: 'The Poets', totalAyahs: 227, type: 'Meccan' },
+  { id: 27, name: 'النمل', englishName: 'An-Naml', englishTranslation: 'The Ant', totalAyahs: 93, type: 'Meccan' },
+  { id: 28, name: 'القصص', englishName: 'Al-Qasas', englishTranslation: 'The Stories', totalAyahs: 88, type: 'Meccan' },
+  { id: 29, name: 'العنكبوت', englishName: 'Al-Ankabut', englishTranslation: 'The Spider', totalAyahs: 69, type: 'Meccan' },
+  { id: 30, name: 'الروم', englishName: 'Ar-Rum', englishTranslation: 'The Romans', totalAyahs: 60, type: 'Meccan' },
+  { id: 31, name: 'لقمان', englishName: 'Luqman', englishTranslation: 'Luqman', totalAyahs: 34, type: 'Meccan' },
+  { id: 32, name: 'السجدة', englishName: 'As-Sajdah', englishTranslation: 'The Prostration', totalAyahs: 30, type: 'Meccan' },
+  { id: 33, name: 'الأحزاب', englishName: 'Al-Ahzab', englishTranslation: 'The Combined Forces', totalAyahs: 73, type: 'Medinan' },
+  { id: 34, name: 'سبأ', englishName: 'Saba', englishTranslation: 'Sheba', totalAyahs: 54, type: 'Meccan' },
+  { id: 35, name: 'فاطر', englishName: 'Fatir', englishTranslation: 'Originator', totalAyahs: 45, type: 'Meccan' },
+  { id: 36, name: 'يس', englishName: 'Ya-Sin', englishTranslation: 'Ya Sin', totalAyahs: 83, type: 'Meccan' },
+  { id: 37, name: 'الصافات', englishName: 'As-Saffat', englishTranslation: 'Those who set the Ranks', totalAyahs: 182, type: 'Meccan' },
+  { id: 38, name: 'ص', englishName: 'Sad', englishTranslation: 'The Letter Sad', totalAyahs: 88, type: 'Meccan' },
+  { id: 39, name: 'الزمر', englishName: 'Az-Zumar', englishTranslation: 'The Troops', totalAyahs: 75, type: 'Meccan' },
+  { id: 40, name: 'غافر', englishName: 'Ghafir', englishTranslation: 'The Forgiver', totalAyahs: 85, type: 'Meccan' },
+  { id: 41, name: 'فصلت', englishName: 'Fussilat', englishTranslation: 'Explained in Detail', totalAyahs: 54, type: 'Meccan' },
+  { id: 42, name: 'الشورى', englishName: 'Ash-Shura', englishTranslation: 'The Consultation', totalAyahs: 53, type: 'Meccan' },
+  { id: 43, name: 'الزخرف', englishName: 'Az-Zukhruf', englishTranslation: 'The Ornaments of Gold', totalAyahs: 89, type: 'Meccan' },
+  { id: 44, name: 'الدخان', englishName: 'Ad-Dukhan', englishTranslation: 'The Smoke', totalAyahs: 59, type: 'Meccan' },
+  { id: 45, name: 'الجاثية', englishName: 'Al-Jathiyah', englishTranslation: 'The Crouching', totalAyahs: 37, type: 'Meccan' },
+  { id: 46, name: 'الأحقاف', englishName: 'Al-Ahqaf', englishTranslation: 'The Wind-Curved Sandhills', totalAyahs: 35, type: 'Meccan' },
+  { id: 47, name: 'محمد', englishName: 'Muhammad', englishTranslation: 'Muhammad', totalAyahs: 38, type: 'Medinan' },
+  { id: 48, name: 'الفتح', englishName: 'Al-Fath', englishTranslation: 'The Victory', totalAyahs: 29, type: 'Medinan' },
+  { id: 49, name: 'الحجرات', englishName: 'Al-Hujurat', englishTranslation: 'The Rooms', totalAyahs: 18, type: 'Medinan' },
+  { id: 50, name: 'ق', englishName: 'Qaf', englishTranslation: 'The Letter Qaf', totalAyahs: 45, type: 'Meccan' },
+  { id: 51, name: 'الذاريات', englishName: 'Adh-Dhariyat', englishTranslation: 'The Winnowing Winds', totalAyahs: 60, type: 'Meccan' },
+  { id: 52, name: 'الطور', englishName: 'At-Tur', englishTranslation: 'The Mount', totalAyahs: 49, type: 'Meccan' },
+  { id: 53, name: 'النجم', englishName: 'An-Najm', englishTranslation: 'The Star', totalAyahs: 62, type: 'Meccan' },
+  { id: 54, name: 'القمر', englishName: 'Al-Qamar', englishTranslation: 'The Moon', totalAyahs: 55, type: 'Meccan' },
+  { id: 55, name: 'الرحمن', englishName: 'Ar-Rahman', englishTranslation: 'The Beneficent', totalAyahs: 78, type: 'Medinan' },
+  { id: 56, name: 'الواقعة', englishName: 'Al-Waqi\'ah', englishTranslation: 'The Inevitable', totalAyahs: 96, type: 'Meccan' },
+  { id: 57, name: 'الحديد', englishName: 'Al-Hadid', englishTranslation: 'The Iron', totalAyahs: 29, type: 'Medinan' },
+  { id: 58, name: 'المجادلة', englishName: 'Al-Mujadilah', englishTranslation: 'The Pleading Woman', totalAyahs: 22, type: 'Medinan' },
+  { id: 59, name: 'الحشر', englishName: 'Al-Hashr', englishTranslation: 'The Exile', totalAyahs: 24, type: 'Medinan' },
+  { id: 60, name: 'الممتحنة', englishName: 'Al-Mumtahanah', englishTranslation: 'She that is to be examined', totalAyahs: 13, type: 'Medinan' },
+  { id: 61, name: 'الصف', englishName: 'As-Saff', englishTranslation: 'The Ranks', totalAyahs: 14, type: 'Medinan' },
+  { id: 62, name: 'الجمعة', englishName: 'Al-Jumu\'ah', englishTranslation: 'The Congregation', totalAyahs: 11, type: 'Medinan' },
+  { id: 63, name: 'المنافقون', englishName: 'Al-Munafiqun', englishTranslation: 'The Hypocrites', totalAyahs: 11, type: 'Medinan' },
+  { id: 64, name: 'التغابن', englishName: 'At-Taghabun', englishTranslation: 'Mutual Disillusion', totalAyahs: 18, type: 'Medinan' },
+  { id: 65, name: 'الطلاق', englishName: 'At-Talaq', englishTranslation: 'The Divorce', totalAyahs: 12, type: 'Medinan' },
+  { id: 66, name: 'التحريم', englishName: 'At-Tahrim', englishTranslation: 'The Banning', totalAyahs: 12, type: 'Medinan' },
+  { id: 67, name: 'الملك', englishName: 'Al-Mulk', englishTranslation: 'The Sovereignty', totalAyahs: 30, type: 'Meccan' },
+  { id: 68, name: 'القلم', englishName: 'Al-Qalam', englishTranslation: 'The Pen', totalAyahs: 52, type: 'Meccan' },
+  { id: 69, name: 'الحاقة', englishName: 'Al-Haqqah', englishTranslation: 'The Reality', totalAyahs: 52, type: 'Meccan' },
+  { id: 70, name: 'المعارج', englishName: 'Al-Ma\'arij', englishTranslation: 'The Ascending Stairways', totalAyahs: 44, type: 'Meccan' },
+  { id: 71, name: 'نوح', englishName: 'Nuh', englishTranslation: 'Noah', totalAyahs: 28, type: 'Meccan' },
+  { id: 72, name: 'الجن', englishName: 'Al-Jinn', englishTranslation: 'The Jinn', totalAyahs: 28, type: 'Meccan' },
+  { id: 73, name: 'المزمل', englishName: 'Al-Muzzammil', englishTranslation: 'The Enshrouded One', totalAyahs: 20, type: 'Meccan' },
+  { id: 74, name: 'المدثر', englishName: 'Al-Muddaththir', englishTranslation: 'The Cloaked One', totalAyahs: 56, type: 'Meccan' },
+  { id: 75, name: 'القيامة', englishName: 'Al-Qiyamah', englishTranslation: 'The Rising of the Dead', totalAyahs: 40, type: 'Meccan' },
+  { id: 76, name: 'الإنسان', englishName: 'Al-Insan', englishTranslation: 'Man', totalAyahs: 31, type: 'Medinan' },
+  { id: 77, name: 'المرسلات', englishName: 'Al-Mursalat', englishTranslation: 'The Emissaries', totalAyahs: 50, type: 'Meccan' },
+  { id: 78, name: 'النبأ', englishName: 'An-Naba', englishTranslation: 'The Tidings', totalAyahs: 40, type: 'Meccan' },
+  { id: 79, name: 'النازعات', englishName: 'An-Nazi\'at', englishTranslation: 'Those who drag forth', totalAyahs: 46, type: 'Meccan' },
+  { id: 80, name: 'عبس', englishName: 'Abasa', englishTranslation: 'He Frowned', totalAyahs: 42, type: 'Meccan' },
+  { id: 81, name: 'التكوير', englishName: 'At-Takwir', englishTranslation: 'The Overthrowing', totalAyahs: 29, type: 'Meccan' },
+  { id: 82, name: 'الانفطار', englishName: 'Al-Infitar', englishTranslation: 'The Cleaving', totalAyahs: 19, type: 'Meccan' },
+  { id: 83, name: 'المطففين', englishName: 'Al-Mutaffifin', englishTranslation: 'Defrauding', totalAyahs: 36, type: 'Meccan' },
+  { id: 84, name: 'الانشقاق', englishName: 'Al-Inshiqaq', englishTranslation: 'The Sundering', totalAyahs: 25, type: 'Meccan' },
+  { id: 85, name: 'البروج', englishName: 'Al-Buruj', englishTranslation: 'The Mansions of the Stars', totalAyahs: 22, type: 'Meccan' },
+  { id: 86, name: 'الطارق', englishName: 'At-Tariq', englishTranslation: 'The Morning Star', totalAyahs: 17, type: 'Meccan' },
+  { id: 87, name: 'الأعلى', englishName: 'Al-A\'la', englishTranslation: 'The Most High', totalAyahs: 19, type: 'Meccan' },
+  { id: 88, name: 'الغاشية', englishName: 'Al-Ghashiyah', englishTranslation: 'The Overwhelming', totalAyahs: 26, type: 'Meccan' },
+  { id: 89, name: 'الفجر', englishName: 'Al-Fajr', englishTranslation: 'The Dawn', totalAyahs: 30, type: 'Meccan' },
+  { id: 90, name: 'البلد', englishName: 'Al-Balad', englishTranslation: 'The City', totalAyahs: 20, type: 'Meccan' },
+  { id: 91, name: 'الشمس', englishName: 'Ash-Shams', englishTranslation: 'The Sun', totalAyahs: 15, type: 'Meccan' },
+  { id: 92, name: 'الليل', englishName: 'Al-Layl', englishTranslation: 'The Night', totalAyahs: 21, type: 'Meccan' },
+  { id: 93, name: 'الضحى', englishName: 'Ad-Duha', englishTranslation: 'The Morning Hours', totalAyahs: 11, type: 'Meccan' },
+  { id: 94, name: 'الشرح', englishName: 'Ash-Sharh', englishTranslation: 'The Consolation', totalAyahs: 8, type: 'Meccan' },
+  { id: 95, name: 'التين', englishName: 'At-Tin', englishTranslation: 'The Fig', totalAyahs: 8, type: 'Meccan' },
+  { id: 96, name: 'العلق', englishName: 'Al-Alaq', englishTranslation: 'The Clot', totalAyahs: 19, type: 'Meccan' },
+  { id: 97, name: 'القدر', englishName: 'Al-Qadr', englishTranslation: 'The Power', totalAyahs: 5, type: 'Meccan' },
+  { id: 98, name: 'البينة', englishName: 'Al-Bayyinah', englishTranslation: 'The Clear Proof', totalAyahs: 8, type: 'Medinan' },
+  { id: 99, name: 'الزلزلة', englishName: 'Az-Zalzalah', englishTranslation: 'The Earthquake', totalAyahs: 8, type: 'Medinan' },
+  { id: 100, name: 'العاديات', englishName: 'Al-Adiyat', englishTranslation: 'The Chargers', totalAyahs: 11, type: 'Meccan' },
+  { id: 101, name: 'القارعة', englishName: 'Al-Qari\'ah', englishTranslation: 'The Calamity', totalAyahs: 11, type: 'Meccan' },
+  { id: 102, name: 'التكاثر', englishName: 'At-Takathur', englishTranslation: 'Competition in Increase', totalAyahs: 8, type: 'Meccan' },
+  { id: 103, name: 'العصر', englishName: 'Al-Asr', englishTranslation: 'The Declining Day', totalAyahs: 3, type: 'Meccan' },
+  { id: 104, name: 'الهمزة', englishName: 'Al-Humazah', englishTranslation: 'The Slanderer', totalAyahs: 9, type: 'Meccan' },
+  { id: 105, name: 'الفيل', englishName: 'Al-Fil', englishTranslation: 'The Elephant', totalAyahs: 5, type: 'Meccan' },
+  { id: 106, name: 'قريش', englishName: 'Quraysh', englishTranslation: 'Quraysh', totalAyahs: 4, type: 'Meccan' },
+  { id: 107, name: 'الماعون', englishName: 'Al-Ma\'un', englishTranslation: 'Neighborly Assistance', totalAyahs: 7, type: 'Meccan' },
+  { id: 108, name: 'الكوثر', englishName: 'Al-Kawthar', englishTranslation: 'The Abundance', totalAyahs: 3, type: 'Meccan' },
+  { id: 109, name: 'الكافرون', englishName: 'Al-Kafirun', englishTranslation: 'The Disbelievers', totalAyahs: 6, type: 'Meccan' },
+  { id: 110, name: 'النصر', englishName: 'An-Nasr', englishTranslation: 'Divine Support', totalAyahs: 3, type: 'Medinan' },
+  { id: 111, name: 'المسد', englishName: 'Al-Masad', englishTranslation: 'Palm Fibre', totalAyahs: 5, type: 'Meccan' },
+  { id: 112, name: 'الإخلاص', englishName: 'Al-Ikhlas', englishTranslation: 'The Sincerity', totalAyahs: 4, type: 'Meccan' },
+  { id: 113, name: 'الفلق', englishName: 'Al-Falaq', englishTranslation: 'The Daybreak', totalAyahs: 5, type: 'Meccan' },
+  { id: 114, name: 'الناس', englishName: 'An-Nas', englishTranslation: 'Mankind', totalAyahs: 6, type: 'Meccan' }
 ];
 
 // High-fidelity preloaded sample surahs (1, 103, 108, 112, 114)
 export const SAMPLE_SURAHS = [
   {
     id: 1,
-    name: 'Ø§Ù„ÙØ§ØªØ­Ø©',
+    name: 'الفاتحة',
     englishName: 'Al-Fatihah',
     englishTranslation: 'The Opening',
     totalAyahs: 7,
@@ -171,87 +171,87 @@ export const SAMPLE_SURAHS = [
     ayahs: [
       {
         number: 1,
-        text: "Ø¨ÙØ³Ù’Ù…Ù Ø§Ù„Ù„Ù‘ÙŽÙ‡Ù Ø§Ù„Ø±Ù‘ÙŽØ­Ù’Ù…ÙŽÙ°Ù†Ù Ø§Ù„Ø±Ù‘ÙŽØ­ÙÙŠÙ…Ù",
+        text: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
         translation: "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
         words: [
-          { text: "Ø¨ÙØ³Ù’Ù…Ù", rule: "none" },
-          { text: "Ø§Ù„Ù„Ù‘ÙŽÙ‡Ù", rule: "none" },
-          { text: "Ø§Ù„Ø±Ù‘ÙŽØ­Ù’Ù…ÙŽÙ°Ù†Ù", rule: "none" },
-          { text: "Ø§Ù„Ø±Ù‘ÙŽØ­ÙÙŠÙ…Ù", rule: "madd" }
+          { text: "بِسْمِ", rule: "none" },
+          { text: "اللَّهِ", rule: "none" },
+          { text: "الرَّحْمَٰنِ", rule: "none" },
+          { text: "الرَّحِيمِ", rule: "madd" }
         ]
       },
       {
         number: 2,
-        text: "Ø§Ù„Ù’Ø­ÙŽÙ…Ù’Ø¯Ù Ù„ÙÙ„Ù‘ÙŽÙ‡Ù Ø±ÙŽØ¨Ù‘Ù Ø§Ù„Ù’Ø¹ÙŽØ§Ù„ÙŽÙ…ÙÙŠÙ†ÙŽ",
+        text: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
         translation: "[All] praise is [due] to Allah, Lord of the worlds -",
         words: [
-          { text: "Ø§Ù„Ù’Ø­ÙŽÙ…Ù’Ø¯Ù", rule: "none" },
-          { text: "Ù„ÙÙ„Ù‘ÙŽÙ‡Ù", rule: "none" },
-          { text: "Ø±ÙŽØ¨Ù‘Ù", rule: "none" },
-          { text: "Ø§Ù„Ù’Ø¹ÙŽØ§Ù„ÙŽÙ…ÙÙŠÙ†ÙŽ", rule: "madd" }
+          { text: "الْحَمْدُ", rule: "none" },
+          { text: "لِلَّهِ", rule: "none" },
+          { text: "رَبِّ", rule: "none" },
+          { text: "الْعَالَمِينَ", rule: "madd" }
         ]
       },
       {
         number: 3,
-        text: "Ø§Ù„Ø±Ù‘ÙŽØ­Ù’Ù…ÙŽÙ°Ù†Ù Ø§Ù„Ø±Ù‘ÙŽØ­ÙÙŠÙ…Ù",
+        text: "الرَّحْمَٰنِ الرَّحِيمِ",
         translation: "The Entirely Merciful, the Especially Merciful,",
         words: [
-          { text: "Ø§Ù„Ø±Ù‘ÙŽØ­Ù’Ù…ÙŽÙ°Ù†Ù", rule: "none" },
-          { text: "Ø§Ù„Ø±Ù‘ÙŽØ­ÙÙŠÙ…Ù", rule: "madd" }
+          { text: "الرَّحْمَٰنِ", rule: "none" },
+          { text: "الرَّحِيمِ", rule: "madd" }
         ]
       },
       {
         number: 4,
-        text: "Ù…ÙŽØ§Ù„ÙÙƒÙ ÙŠÙŽÙˆÙ’Ù…Ù Ø§Ù„Ø¯Ù‘ÙÙŠÙ†Ù",
+        text: "مَالِكِ يَوْمِ الدِّينِ",
         translation: "Sovereign of the Day of Recompense.",
         words: [
-          { text: "Ù…ÙŽØ§Ù„ÙÙƒÙ", rule: "none" },
-          { text: "ÙŠÙŽÙˆÙ’Ù…Ù", rule: "none" },
-          { text: "Ø§Ù„Ø¯Ù‘ÙÙŠÙ†Ù", rule: "madd" }
+          { text: "مَالِكِ", rule: "none" },
+          { text: "يَوْمِ", rule: "none" },
+          { text: "الدِّينِ", rule: "madd" }
         ]
       },
       {
         number: 5,
-        text: "Ø¥ÙÙŠÙ‘ÙŽØ§ÙƒÙŽ Ù†ÙŽØ¹Ù’Ø¨ÙØ¯Ù ÙˆÙŽØ¥ÙÙŠÙ‘ÙŽØ§ÙƒÙŽ Ù†ÙŽØ³Ù’ØªÙŽØ¹ÙÙŠÙ†Ù",
+        text: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
         translation: "It is You we worship and You we ask for help.",
         words: [
-          { text: "Ø¥ÙÙŠÙ‘ÙŽØ§ÙƒÙŽ", rule: "none" },
-          { text: "Ù†ÙŽØ¹Ù’Ø¨ÙØ¯Ù", rule: "none" },
-          { text: "ÙˆÙŽØ¥ÙÙŠÙ‘ÙŽØ§ÙƒÙŽ", rule: "none" },
-          { text: "Ù†ÙŽØ³Ù’ØªÙŽØ¹ÙÙŠÙ†Ù", rule: "madd" }
+          { text: "إِيَّاكَ", rule: "none" },
+          { text: "نَعْبُدُ", rule: "none" },
+          { text: "وَإِيَّاكَ", rule: "none" },
+          { text: "نَسْتَعِينُ", rule: "madd" }
         ]
       },
       {
         number: 6,
-        text: "Ø§Ù‡Ù’Ø¯ÙÙ†ÙŽØ§ Ø§Ù„ØµÙ‘ÙØ±ÙŽØ§Ø·ÙŽ Ø§Ù„Ù’Ù…ÙØ³Ù’ØªÙŽÙ‚ÙÙŠÙ…ÙŽ",
+        text: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
         translation: "Guide us to the straight path -",
         words: [
-          { text: "Ø§Ù‡Ù’Ø¯ÙÙ†ÙŽØ§", rule: "none" },
-          { text: "Ø§Ù„ØµÙ‘ÙØ±ÙŽØ§Ø·ÙŽ", rule: "tafkheem" },
-          { text: "Ø§Ù„Ù’Ù…ÙØ³Ù’ØªÙŽÙ‚ÙÙŠÙ…ÙŽ", rule: "madd" }
+          { text: "اهْدِنَا", rule: "none" },
+          { text: "الصِّرَاطَ", rule: "tafkheem" },
+          { text: "الْمُسْتَقِيمَ", rule: "madd" }
         ]
       },
       {
         number: 7,
-        text: "ØµÙØ±ÙŽØ§Ø·ÙŽ Ø§Ù„Ù‘ÙŽØ°ÙÙŠÙ†ÙŽ Ø£ÙŽÙ†Ù’Ø¹ÙŽÙ…Ù’ØªÙŽ Ø¹ÙŽÙ„ÙŽÙŠÙ’Ù‡ÙÙ…Ù’ ØºÙŽÙŠÙ’Ø±Ù Ø§Ù„Ù’Ù…ÙŽØºÙ’Ø¶ÙÙˆØ¨Ù Ø¹ÙŽÙ„ÙŽÙŠÙ’Ù‡ÙÙ…Ù’ ÙˆÙŽÙ„ÙŽØ§ Ø§Ù„Ø¶Ù‘ÙŽØ§Ù„Ù‘ÙÙŠÙ†ÙŽ",
+        text: "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
         translation: "The path of those upon whom You have bestowed favor, not of those who have evoked [Your] anger or of those who are astray.",
         words: [
-          { text: "ØµÙØ±ÙŽØ§Ø·ÙŽ", rule: "tafkheem" },
-          { text: "Ø§Ù„Ù‘ÙŽØ°ÙÙŠÙ†ÙŽ", rule: "none" },
-          { text: "Ø£ÙŽÙ†Ù’Ø¹ÙŽÙ…Ù’ØªÙŽ", rule: "none" },
-          { text: "Ø¹ÙŽÙ„ÙŽÙŠÙ’Ù‡ÙÙ…Ù’", rule: "none" },
-          { text: "ØºÙŽÙŠÙ’Ø±Ù", rule: "tafkheem" },
-          { text: "Ø§Ù„Ù’Ù…ÙŽØºÙ’Ø¶ÙÙˆØ¨Ù", rule: "tafkheem" },
-          { text: "Ø¹ÙŽÙ„ÙŽÙŠÙ’Ù‡ÙÙ…Ù’", rule: "none" },
-          { text: "ÙˆÙŽÙ„ÙŽØ§", rule: "none" },
-          { text: "Ø§Ù„Ø¶Ù‘ÙŽØ§Ù„Ù‘ÙÙŠÙ†ÙŽ", rule: "madd" }
+          { text: "صِرَاطَ", rule: "tafkheem" },
+          { text: "الَّذِينَ", rule: "none" },
+          { text: "أَنْعَمْتَ", rule: "none" },
+          { text: "عَلَيْهِمْ", rule: "none" },
+          { text: "غَيْرِ", rule: "tafkheem" },
+          { text: "الْمَغْضُوبِ", rule: "tafkheem" },
+          { text: "عَلَيْهِمْ", rule: "none" },
+          { text: "وَلَا", rule: "none" },
+          { text: "الضَّالِّينَ", rule: "madd" }
         ]
       }
     ]
   },
   {
     id: 108,
-    name: 'Ø§Ù„ÙƒÙˆØ«Ø±',
+    name: 'الكوثر',
     englishName: 'Al-Kawthar',
     englishTranslation: 'The Abundance',
     totalAyahs: 3,
@@ -259,40 +259,40 @@ export const SAMPLE_SURAHS = [
     ayahs: [
       {
         number: 1,
-        text: "Ø¥ÙÙ†Ù‘ÙŽØ§ Ø£ÙŽØ¹Ù’Ø·ÙŽÙŠÙ’Ù†ÙŽØ§ÙƒÙŽ Ø§Ù„Ù’ÙƒÙŽÙˆÙ’Ø«ÙŽØ±ÙŽ",
+        text: "إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ",
         translation: "Indeed, We have granted you, [O Muhammad], al-Kawthar.",
         words: [
-          { text: "Ø¥ÙÙ†Ù‘ÙŽØ§", rule: "ghunnah" },
-          { text: "Ø£ÙŽØ¹Ù’Ø·ÙŽÙŠÙ’Ù†ÙŽØ§ÙƒÙŽ", rule: "tafkheem" },
-          { text: "Ø§Ù„Ù’ÙƒÙŽÙˆÙ’Ø«ÙŽØ±ÙŽ", rule: "tafkheem" }
+          { text: "إِنَّا", rule: "ghunnah" },
+          { text: "أَعْطَيْنَاكَ", rule: "tafkheem" },
+          { text: "الْكَوْثَرَ", rule: "tafkheem" }
         ]
       },
       {
         number: 2,
-        text: "ÙÙŽØµÙŽÙ„Ù‘Ù Ù„ÙØ±ÙŽØ¨Ù‘ÙÙƒÙŽ ÙˆÙŽØ§Ù†Ù’Ø­ÙŽØ±Ù’",
+        text: "فَصَلِّ لِرَبِّكَ وَانْحَرْ",
         translation: "So pray to your Lord and sacrifice [to Him alone].",
         words: [
-          { text: "ÙÙŽØµÙŽÙ„Ù‘Ù", rule: "tafkheem" },
-          { text: "Ù„ÙØ±ÙŽØ¨Ù‘ÙÙƒÙŽ", rule: "none" },
-          { text: "ÙˆÙŽØ§Ù†Ù’Ø­ÙŽØ±Ù’", rule: "tafkheem" }
+          { text: "فَصَلِّ", rule: "tafkheem" },
+          { text: "لِرَبِّكَ", rule: "none" },
+          { text: "وَانْحَرْ", rule: "tafkheem" }
         ]
       },
       {
         number: 3,
-        text: "Ø¥ÙÙ†Ù‘ÙŽ Ø´ÙŽØ§Ù†ÙØ¦ÙŽÙƒÙŽ Ù‡ÙÙˆÙŽ Ø§Ù„Ù’Ø£ÙŽØ¨Ù’ØªÙŽØ±Ù",
+        text: "إِنَّ شَانِئَكَ هُوَ الْأَبْتَرُ",
         translation: "Indeed, your enemy is the one cut off.",
         words: [
-          { text: "Ø¥ÙÙ†Ù‘ÙŽ", rule: "ghunnah" },
-          { text: "Ø´ÙŽØ§Ù†ÙØ¦ÙŽÙƒÙŽ", rule: "none" },
-          { text: "Ù‡ÙÙˆÙŽ", rule: "none" },
-          { text: "Ø§Ù„Ù’Ø£ÙŽØ¨Ù’ØªÙŽØ±Ù", rule: "qalqalah" }
+          { text: "إِنَّ", rule: "ghunnah" },
+          { text: "شَانِئَكَ", rule: "none" },
+          { text: "هُوَ", rule: "none" },
+          { text: "الْأَبْتَرُ", rule: "qalqalah" }
         ]
       }
     ]
   },
   {
     id: 103,
-    name: 'Ø§Ù„Ø¹ØµØ±',
+    name: 'العصر',
     englishName: 'Al-Asr',
     englishTranslation: 'The Declining Day',
     totalAyahs: 3,
@@ -300,44 +300,44 @@ export const SAMPLE_SURAHS = [
     ayahs: [
       {
         number: 1,
-        text: "ÙˆÙŽØ§Ù„Ù’Ø¹ÙŽØµÙ’Ø±Ù",
+        text: "وَالْعَصْرِ",
         translation: "By time,",
         words: [
-          { text: "ÙˆÙŽØ§Ù„Ù’Ø¹ÙŽØµÙ’Ø±Ù", rule: "tafkheem" }
+          { text: "وَالْعَصْرِ", rule: "tafkheem" }
         ]
       },
       {
         number: 2,
-        text: "Ø¥ÙÙ†Ù‘ÙŽ Ø§Ù„Ù’Ø¥ÙÙ†Ø³ÙŽØ§Ù†ÙŽ Ù„ÙŽÙÙÙŠ Ø®ÙØ³Ù’Ø±Ù",
+        text: "إِنَّ الْإِنسَانَ لَفِي خُسْرٍ",
         translation: "Indeed, mankind is in loss,",
         words: [
-          { text: "Ø¥ÙÙ†Ù‘ÙŽ", rule: "ghunnah" },
-          { text: "Ø§Ù„Ù’Ø¥ÙÙ†Ø³ÙŽØ§Ù†ÙŽ", rule: "ikhfa" },
-          { text: "Ù„ÙŽÙÙÙŠ", rule: "none" },
-          { text: "Ø®ÙØ³Ù’Ø±Ù", rule: "tafkheem" }
+          { text: "إِنَّ", rule: "ghunnah" },
+          { text: "الْإِنسَانَ", rule: "ikhfa" },
+          { text: "لَفِي", rule: "none" },
+          { text: "خُسْرٍ", rule: "tafkheem" }
         ]
       },
       {
         number: 3,
-        text: "Ø¥ÙÙ„Ù‘ÙŽØ§ Ø§Ù„Ù‘ÙŽØ°ÙÙŠÙ†ÙŽ Ø¢Ù…ÙŽÙ†ÙÙˆØ§ ÙˆÙŽØ¹ÙŽÙ…ÙÙ„ÙÙˆØ§ Ø§Ù„ØµÙ‘ÙŽØ§Ù„ÙØ­ÙŽØ§ØªÙ ÙˆÙŽØªÙŽÙˆÙŽØ§ØµÙŽÙˆÙ’Ø§ Ø¨ÙØ§Ù„Ù’Ø­ÙŽÙ‚Ù‘Ù ÙˆÙŽØªÙŽÙˆÙŽØ§ØµÙŽÙˆÙ’Ø§ Ø¨ÙØ§Ù„ØµÙ‘ÙŽØ¨Ù’Ø±Ù",
+        text: "إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ وَتَوَاصَوْا بِالْحَقِّ وَتَوَاصَوْا بِالصَّبْرِ",
         translation: "Except for those who have believed and done righteous deeds and advised each other to truth and advised each other to patience.",
         words: [
-          { text: "Ø¥ÙÙ„Ù‘ÙŽØ§", rule: "none" },
-          { text: "Ø§Ù„Ù‘ÙŽØ°ÙÙŠÙ†ÙŽ", rule: "none" },
-          { text: "Ø¢Ù…ÙŽÙ†ÙÙˆØ§", rule: "none" },
-          { text: "ÙˆÙŽØ¹ÙŽÙ…ÙÙ„ÙÙˆØ§", rule: "none" },
-          { text: "Ø§Ù„ØµÙ‘ÙŽØ§Ù„ÙØ­ÙŽØ§ØªÙ", rule: "tafkheem" },
-          { text: "ÙˆÙŽØªÙŽÙˆÙŽØ§ØµÙŽÙˆÙ’Ø§", rule: "none" },
-          { text: "Ø¨ÙØ§Ù„Ù’Ø­ÙŽÙ‚Ù‘Ù", rule: "tafkheem" },
-          { text: "ÙˆÙŽØªÙŽÙˆÙŽØ§ØµÙŽÙˆÙ’Ø§", rule: "none" },
-          { text: "Ø¨ÙØ§Ù„ØµÙ‘ÙŽØ¨Ù’Ø±Ù", rule: "qalqalah" }
+          { text: "إِلَّا", rule: "none" },
+          { text: "الَّذِينَ", rule: "none" },
+          { text: "آمَنُوا", rule: "none" },
+          { text: "وَعَمِلُوا", rule: "none" },
+          { text: "الصَّالِحَاتِ", rule: "tafkheem" },
+          { text: "وَتَوَاصَوْا", rule: "none" },
+          { text: "بِالْحَقِّ", rule: "tafkheem" },
+          { text: "وَتَوَاصَوْا", rule: "none" },
+          { text: "بِالصَّبْرِ", rule: "qalqalah" }
         ]
       }
     ]
   },
   {
     id: 112,
-    name: 'Ø§Ù„Ø¥Ø®Ù„Ø§Øµ',
+    name: 'الإخلاص',
     englishName: 'Al-Ikhlas',
     englishTranslation: 'The Sincerity',
     totalAyahs: 4,
@@ -345,52 +345,52 @@ export const SAMPLE_SURAHS = [
     ayahs: [
       {
         number: 1,
-        text: "Ù‚ÙÙ„Ù’ Ù‡ÙÙˆÙŽ Ø§Ù„Ù„Ù‘ÙŽÙ‡Ù Ø£ÙŽØ­ÙŽØ¯ÙŒ",
+        text: "قُلْ هُوَ اللَّهُ أَحَدٌ",
         translation: "Say, \"He is Allah, [who is] One,",
         words: [
-          { text: "Ù‚ÙÙ„Ù’", rule: "tafkheem" },
-          { text: "Ù‡ÙÙˆÙŽ", rule: "none" },
-          { text: "Ø§Ù„Ù„Ù‘ÙŽÙ‡Ù", rule: "none" },
-          { text: "Ø£ÙŽØ­ÙŽØ¯ÙŒ", rule: "qalqalah" }
+          { text: "قُلْ", rule: "tafkheem" },
+          { text: "هُوَ", rule: "none" },
+          { text: "اللَّهُ", rule: "none" },
+          { text: "أَحَدٌ", rule: "qalqalah" }
         ]
       },
       {
         number: 2,
-        text: "Ø§Ù„Ù„Ù‘ÙŽÙ‡Ù Ø§Ù„ØµÙ‘ÙŽÙ…ÙŽØ¯Ù",
+        text: "اللَّهُ الصَّمَدُ",
         translation: "Allah, the Eternal Refuge.",
         words: [
-          { text: "Ø§Ù„Ù„Ù‘ÙŽÙ‡Ù", rule: "none" },
-          { text: "Ø§Ù„ØµÙ‘ÙŽÙ…ÙŽØ¯Ù", rule: "qalqalah" }
+          { text: "اللَّهُ", rule: "none" },
+          { text: "الصَّمَدُ", rule: "qalqalah" }
         ]
       },
       {
         number: 3,
-        text: "Ù„ÙŽÙ…Ù’ ÙŠÙŽÙ„ÙØ¯Ù’ ÙˆÙŽÙ„ÙŽÙ…Ù’ ÙŠÙÙˆÙ„ÙŽØ¯Ù’",
+        text: "لَمْ يَلِدْ وَلَمْ يُولَدْ",
         translation: "He neither begets nor is born,",
         words: [
-          { text: "Ù„ÙŽÙ…Ù’", rule: "none" },
-          { text: "ÙŠÙŽÙ„ÙØ¯Ù’", rule: "qalqalah" },
-          { text: "ÙˆÙŽÙ„ÙŽÙ…Ù’", rule: "none" },
-          { text: "ÙŠÙÙˆÙ„ÙŽØ¯Ù’", rule: "qalqalah" }
+          { text: "لَمْ", rule: "none" },
+          { text: "يَلِدْ", rule: "qalqalah" },
+          { text: "وَلَمْ", rule: "none" },
+          { text: "يُولَدْ", rule: "qalqalah" }
         ]
       },
       {
         number: 4,
-        text: "ÙˆÙŽÙ„ÙŽÙ…Ù’ ÙŠÙŽÙƒÙÙ† Ù„Ù‘ÙŽÙ‡Ù ÙƒÙÙÙÙˆÙ‹Ø§ Ø£ÙŽØ­ÙŽØ¯ÙŒ",
+        text: "وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ",
         translation: "And there is none co-equal or comparable unto Him.\"",
         words: [
-          { text: "ÙˆÙŽÙ„ÙŽÙ…Ù’", rule: "none" },
-          { text: "ÙŠÙŽÙƒÙÙ†", rule: "none" },
-          { text: "Ù„Ù‘ÙŽÙ‡Ù", rule: "idgham" },
-          { text: "ÙƒÙÙÙÙˆÙ‹Ø§", rule: "none" },
-          { text: "Ø£ÙŽØ­ÙŽØ¯ÙŒ", rule: "qalqalah" }
+          { text: "وَلَمْ", rule: "none" },
+          { text: "يَكُن", rule: "none" },
+          { text: "لَّهُ", rule: "idgham" },
+          { text: "كُفُوًا", rule: "none" },
+          { text: "أَحَدٌ", rule: "qalqalah" }
         ]
       }
     ]
   },
   {
     id: 114,
-    name: 'Ø§Ù„Ù†Ø§Ø³',
+    name: 'الناس',
     englishName: 'An-Nas',
     englishTranslation: 'Mankind',
     totalAyahs: 6,
@@ -398,64 +398,64 @@ export const SAMPLE_SURAHS = [
     ayahs: [
       {
         number: 1,
-        text: "Ù‚ÙÙ„Ù’ Ø£ÙŽØ¹ÙÙˆØ°Ù Ø¨ÙØ±ÙŽØ¨Ù‘Ù Ø§Ù„Ù†Ø§Ø³Ù",
+        text: "قُلْ أَعُوذُ بِرَبِّ الناسِ",
         translation: "Say, \"I seek refuge in the Lord of mankind,",
         words: [
-          { text: "Ù‚ÙÙ„Ù’", rule: "tafkheem" },
-          { text: "Ø£ÙŽØ¹ÙÙˆØ°Ù", rule: "none" },
-          { text: "Ø¨ÙØ±ÙŽØ¨Ù‘Ù", rule: "none" },
-          { text: "Ø§Ù„Ù†Ø§Ø³Ù", rule: "ghunnah" }
+          { text: "قُلْ", rule: "tafkheem" },
+          { text: "أَعُوذُ", rule: "none" },
+          { text: "بِرَبِّ", rule: "none" },
+          { text: "الناسِ", rule: "ghunnah" }
         ]
       },
       {
         number: 2,
-        text: "Ù…ÙŽÙ„ÙÙƒÙ Ø§Ù„Ù†Ø§Ø³Ù",
+        text: "مَلِكِ الناسِ",
         translation: "The Sovereign of mankind,",
         words: [
-          { text: "Ù…ÙŽÙ„ÙÙƒÙ", rule: "none" },
-          { text: "Ø§Ù„Ù†Ø§Ø³Ù", rule: "ghunnah" }
+          { text: "مَلِكِ", rule: "none" },
+          { text: "الناسِ", rule: "ghunnah" }
         ]
       },
       {
         number: 3,
-        text: "Ø¥ÙÙ„ÙŽÙ°Ù‡Ù Ø§Ù„Ù†Ø§Ø³Ù",
+        text: "إِلَٰهِ الناسِ",
         translation: "The God of mankind,",
         words: [
-          { text: "Ø¥ÙÙ„ÙŽÙ°Ù‡Ù", rule: "none" },
-          { text: "Ø§Ù„Ù†Ø§Ø³Ù", rule: "ghunnah" }
+          { text: "إِلَٰهِ", rule: "none" },
+          { text: "الناسِ", rule: "ghunnah" }
         ]
       },
       {
         number: 4,
-        text: "Ù…ÙÙ† Ø´ÙŽØ±Ù‘Ù Ø§Ù„Ù’ÙˆÙŽØ³Ù’ÙˆÙŽØ§Ø³Ù Ø§Ù„Ù’Ø®ÙŽÙ†Ù‘ÙŽØ§Ø³Ù",
+        text: "مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ",
         translation: "From the evil of the retreating whisperer -",
         words: [
-          { text: "Ù…ÙÙ†", rule: "none" },
-          { text: "Ø´ÙŽØ±Ù‘Ù", rule: "ikhfa" },
-          { text: "Ø§Ù„Ù’ÙˆÙŽØ³Ù’ÙˆÙŽØ§Ø³Ù", rule: "none" },
-          { text: "Ø§Ù„Ù’Ø®ÙŽÙ†Ù‘ÙŽØ§Ø³Ù", rule: "ghunnah" }
+          { text: "مِن", rule: "none" },
+          { text: "شَرِّ", rule: "ikhfa" },
+          { text: "الْوَسْوَاسِ", rule: "none" },
+          { text: "الْخَنَّاسِ", rule: "ghunnah" }
         ]
       },
       {
         number: 5,
-        text: "Ø§Ù„Ù‘ÙŽØ°ÙÙŠ ÙŠÙÙˆÙŽØ³Ù’ÙˆÙØ³Ù ÙÙÙŠ ØµÙØ¯ÙÙˆØ±Ù Ø§Ù„Ù†Ø§Ø³Ù",
+        text: "الَّذِي يُوَسْوِسُ فِي صُدُورِ الناسِ",
         translation: "Who whispers [evil] into the breasts of mankind -",
         words: [
-          { text: "Ø§Ù„Ù‘ÙŽØ°ÙÙŠ", rule: "none" },
-          { text: "ÙŠÙÙˆÙŽØ³Ù’ÙˆÙØ³Ù", rule: "none" },
-          { text: "ÙÙÙŠ", rule: "none" },
-          { text: "ØµÙØ¯ÙÙˆØ±Ù", rule: "tafkheem" },
-          { text: "Ø§Ù„Ù†Ø§Ø³Ù", rule: "ghunnah" }
+          { text: "الَّذِي", rule: "none" },
+          { text: "يُوَسْوِسُ", rule: "none" },
+          { text: "فِي", rule: "none" },
+          { text: "صُدُورِ", rule: "tafkheem" },
+          { text: "الناسِ", rule: "ghunnah" }
         ]
       },
       {
         number: 6,
-        text: "Ù…ÙÙ†ÙŽ Ø§Ù„Ù’Ø¬ÙÙ†Ù‘ÙŽØ©Ù ÙˆÙŽØ§Ù„Ù†Ø§Ø³Ù",
+        text: "مِنَ الْجِنَّةِ وَالناسِ",
         translation: "From among the jinn and mankind.\"",
         words: [
-          { text: "Ù…ÙÙ†ÙŽ", rule: "none" },
-          { text: "Ø§Ù„Ù’Ø¬ÙÙ†Ù‘ÙŽØ©Ù", rule: "ghunnah" },
-          { text: "ÙˆÙŽØ§Ù„Ù†Ø§Ø³Ù", rule: "ghunnah" }
+          { text: "مِنَ", rule: "none" },
+          { text: "الْجِنَّةِ", rule: "ghunnah" },
+          { text: "وَالناسِ", rule: "ghunnah" }
         ]
       }
     ]
@@ -467,16 +467,16 @@ function parseTajweedWord(word) {
   const w = word;
   let rule = 'none';
 
-  // 1. Ghunnah: shadda on noon (U+0646) or meem (U+0645)
+  // 1. Ghunnah: shadda on noon ن or meem م
   if (/[نم]ّ/.test(w)) {
     rule = 'ghunnah';
 
-  // 2. Qalqalah: qaf/ta/ba/jeem/dal + sukoon or at word end
+  // 2. Qalqalah: قطبجد + sukoon or at end
   } else if (/[قطبجد]ْ/.test(w) ||
              /[قطبجد]$/.test(w.replace(/[ً-ْٰ]/g, ''))) {
     rule = 'qalqalah';
 
-  // 3. Madd: alif madda, superscript alif, or long vowels
+  // 3. Madd: alif madda آ, superscript alif ٰ, or long vowels
   } else if (
     w.includes('آ') ||
     w.includes('ٰ') ||
@@ -487,7 +487,7 @@ function parseTajweedWord(word) {
   ) {
     rule = 'madd';
 
-  // 4. Tanween: double fatha/damma/kasra
+  // 4. Tanween: double fathaً, dammaٌ, kasraٍ
   } else if (/[ًٌٍ]/.test(w)) {
     rule = 'izhar';
 
@@ -498,6 +498,7 @@ function parseTajweedWord(word) {
 
   return { text: word, rule };
 }
+
 // Loads Ayahs dynamically (reads from sample, cache or pulls from API)
 export async function loadSurahAyahs(surahId) {
   // 1. Check if it is preloaded in samples
@@ -562,4 +563,3 @@ export function getAudioUrl(qariId, surahNumber, ayahNumber) {
   const formattedAyah = String(ayahNumber).padStart(3, '0');
   return `https://everyayah.com/data/${qari.folder}/${formattedSurah}${formattedAyah}.mp3`;
 }
-
