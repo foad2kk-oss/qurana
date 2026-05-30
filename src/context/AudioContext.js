@@ -73,7 +73,7 @@ export const AudioProvider = ({ children }) => {
         setGroupRepetition(next._groupPass);
       }
       // Small delay to let the previous sound fully release
-      setTimeout(() => _loadAndPlay(next), 150);
+      setTimeout(() => _loadAndPlay(next), 30);
     } else {
       setIsPlaying(false);
       setGroupRepetition(1);

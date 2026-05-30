@@ -8,8 +8,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../constants/Theme';
 import { ProgressContext } from '../context/ProgressContext';
 import { getTafsir } from '../services/TafsirData';
-import { SURAHS } from '../services/QuranData';
-import { SURAH_JUZ } from '../services/QuranData';
+import { ALL_SURAHS, SURAH_JUZ } from '../services/QuranData';
+const SURAHS = ALL_SURAHS;
 
 const { width } = Dimensions.get('window');
 
@@ -44,7 +44,7 @@ function SurahRow({ surah, isSelected, onPress, activeColors }) {
       <View style={{ flex: 1 }}>
         <Text style={[styles.surahNameAr, { color: activeColors.text }]}>{surah.name}</Text>
         <Text style={[styles.surahSubtitle, { color: activeColors.textMuted }]}>
-          {surah.numberOfAyahs} آية · جزء {SURAH_JUZ[surah.number] || 1}
+          {surah.totalAyahs} آية · جزء {SURAH_JUZ[surah.number] || 1}
         </Text>
       </View>
       <View style={[styles.juzBadge, { backgroundColor: COLORS.primary + '22' }]}>
@@ -85,7 +85,7 @@ function TafsirCard({ tafsir, surah, activeColors }) {
           <View>
             <Text style={styles.tafsirSurahName}>{tafsir.title || surah.name}</Text>
             <Text style={styles.tafsirSurahEn}>
-              {tafsir.ayahCount || surah.numberOfAyahs} آية · جزء {SURAH_JUZ[surah.number] || 1}
+              {tafsir.ayahCount || surah.totalAyahs} آية · جزء {SURAH_JUZ[surah.number] || 1}
             </Text>
           </View>
           <View style={[styles.revelationBadge, { backgroundColor: revBadge.bg }]}>
@@ -146,13 +146,13 @@ export default function TafsirScreen({ navigation, route }) {
   const [showList, setShowList] = useState(!initialSurah);
   const [tafsir, setTafsir] = useState(
     initialSurah
-      ? getTafsir(initialSurah.number, initialSurah.name, initialSurah.englishName, initialSurah.numberOfAyahs, initialSurah.revelationType)
+      ? getTafsir(initialSurah.number, initialSurah.name, initialSurah.englishName, initialSurah.totalAyahs, initialSurah.type)
       : null
   );
 
   const handleSelect = (surah) => {
     setSelectedSurah(surah);
-    const t = getTafsir(surah.number, surah.name, surah.englishName, surah.numberOfAyahs, surah.revelationType);
+    const t = getTafsir(surah.number, surah.name, surah.englishName, surah.totalAyahs, surah.type);
     setTafsir(t);
     setShowList(false);
   };
@@ -177,8 +177,8 @@ export default function TafsirScreen({ navigation, route }) {
         style={styles.topBar}
       >
         {navigation && (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <MaterialCommunityIcons name="arrow-right" size={24} color="#FFF" />
+          <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backBtn}>
+            <MaterialCommunityIcons name="home" size={24} color="#FFF" />
           </TouchableOpacity>
         )}
         <Text style={styles.topBarTitle}>تفسير السور</Text>
