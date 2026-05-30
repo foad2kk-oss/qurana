@@ -464,19 +464,40 @@ export const SAMPLE_SURAHS = [
 
 // Helper to check if a word has a Tajweed rule dynamically
 function parseTajweedWord(word) {
+  const w = word;
   let rule = 'none';
-  const cleanWord = word.replace(/[\u0615-\u061A\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED]/g, '');
 
-  if (cleanWord.includes('Ù†Ù‘') || cleanWord.includes('Ù…Ù‘')) {
+  // 1. Ghunnah: shadda on noon (U+0646) or meem (U+0645)
+  if (/[نم]ّ/.test(w)) {
     rule = 'ghunnah';
-  } else if (/[Ù‚Ø·Ø¨Ø¬Ø¯]Ù’/.test(cleanWord) || /[Ù‚Ø·Ø¨Ø¬Ø¯]$/.test(cleanWord.replace(/[\u064B-\u0652]/g, ''))) {
+
+  // 2. Qalqalah: qaf/ta/ba/jeem/dal + sukoon or at word end
+  } else if (/[قطبجد]ْ/.test(w) ||
+             /[قطبجد]$/.test(w.replace(/[ً-ْٰ]/g, ''))) {
     rule = 'qalqalah';
-  } else if (/[\u0653]/.test(cleanWord) || cleanWord.includes('~')) {
+
+  // 3. Madd: alif madda, superscript alif, or long vowels
+  } else if (
+    w.includes('آ') ||
+    w.includes('ٰ') ||
+    /َا/.test(w) ||
+    /ُو/.test(w) ||
+    /ِي/.test(w) ||
+    /َ[ىي]/.test(w)
+  ) {
     rule = 'madd';
+
+  // 4. Tanween: double fatha/damma/kasra
+  } else if (/[ًٌٍ]/.test(w)) {
+    rule = 'izhar';
+
+  // 5. Ikhfa: noon + sukoon
+  } else if (/نْ/.test(w)) {
+    rule = 'ikhfa';
   }
+
   return { text: word, rule };
 }
-
 // Loads Ayahs dynamically (reads from sample, cache or pulls from API)
 export async function loadSurahAyahs(surahId) {
   // 1. Check if it is preloaded in samples
