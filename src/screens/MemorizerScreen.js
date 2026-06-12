@@ -107,34 +107,43 @@ export default function MemorizerScreen({ navigation }) {
   // Reset sequential progress when range or surah changes
   useEffect(() => { setSeqOffset(0); setCompletedSeq([]); setEvaluationResult(null); }, [selectedSurahIndex, ayahRange.start, ayahRange.end]);
 
-  // ── Reveal mode (التسميع المخفي — آية بآية كدوائر) ──
+  // ── Reveal mode (التسميع المخفي) ──
   const [isRevealMode,       setIsRevealMode]       = useState(false);
-  const [revealedAyahs,      setRevealedAyahs]      = useState(new Set()); // indices in displayAyahs
-  const [errorAyahs,         setErrorAyahs]         = useState(new Set()); // indices with mistakes
-  const [currentRevealIdx,   setCurrentRevealIdx]   = useState(0);         // active ayah index
+  const [revealedAyahs,      setRevealedAyahs]      = useState(new Set());
+  const [errorAyahs,         setErrorAyahs]         = useState(new Set());
+  const [currentRevealIdx,   setCurrentRevealIdx]   = useState(0);
   const [isRevealListening,  setIsRevealListening]  = useState(false);
   const [revealAllDone,      setRevealAllDone]       = useState(false);
+  const [lastHeard,          setLastHeard]           = useState('');
   const revealRecogRef       = useRef(null);
   const isRevealListenRef    = useRef(false);
   const currentRevealIdxRef  = useRef(0);
-  const revealAyahsRef       = useRef([]); // full displayAyahs list
+  const revealAyahsRef       = useRef([]);
+  const revealScrollRef      = useRef(null);
 
   const normalizeAr = (s = '') =>
     s.replace(/[ؐ-ًؚ-ٰٟۖ-ۭ]/g, '')
      .replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
+     .replace(/[ًٌٍَُِّْ]/g, '')
      .replace(/\s+/g, ' ').trim();
 
-  function processRevealAyah(text) {
+  function scoreAyah(spokenText, ayahWords) {
+    const spoken = normalizeAr(spokenText).split(/\s+/).filter(Boolean);
+    if (!spoken.length || !ayahWords.length) return 0;
+    let matches = 0;
+    const targetNorm = ayahWords.map(w => normalizeAr(w.text));
+    spoken.forEach(sw => {
+      if (targetNorm.some(tw => tw === sw || tw.includes(sw) || sw.includes(tw))) matches++;
+    });
+    return matches / Math.max(spoken.length, ayahWords.length);
+  }
+
+  function advanceReveal(isCorrect) {
     const idx = currentRevealIdxRef.current;
     const ayahs = revealAyahsRef.current;
     if (idx >= ayahs.length) return;
 
-    const ayahWords = ayahs[idx]?.words || [];
-    const spoken  = normalizeAr(text).split(/\s+/).filter(Boolean);
-    const correct = spoken.filter((w, i) => normalizeAr(ayahWords[i]?.text || '') === w).length;
-    const ratio   = ayahWords.length > 0 ? correct / ayahWords.length : 0;
-
-    if (ratio >= 0.5) {
+    if (isCorrect) {
       setRevealedAyahs(prev => new Set([...prev, idx]));
     } else {
       setErrorAyahs(prev => new Set([...prev, idx]));
@@ -151,39 +160,57 @@ export default function MemorizerScreen({ navigation }) {
     }
   }
 
+  function processRevealSpeech(text) {
+    const idx = currentRevealIdxRef.current;
+    const ayahs = revealAyahsRef.current;
+    if (idx >= ayahs.length) return;
+    setLastHeard(text.trim());
+    const ratio = scoreAyah(text, ayahs[idx]?.words || []);
+    advanceReveal(ratio >= 0.45);
+  }
+
+  function startRevealSession() {
+    if (!isRevealListenRef.current) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const r = new SR();
+    r.lang = 'ar-SA'; r.continuous = false; r.interimResults = true;
+    let finalText = '';
+
+    r.onresult = e => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+        else interim = e.results[i][0].transcript;
+      }
+      if (interim) setLastHeard(interim);
+    };
+    r.onend = () => {
+      revealRecogRef.current = null;
+      if (finalText.trim()) processRevealSpeech(finalText);
+      if (isRevealListenRef.current) setTimeout(startRevealSession, 200);
+    };
+    r.onerror = ev => {
+      if (ev.error === 'no-speech') { if (isRevealListenRef.current) setTimeout(startRevealSession, 300); }
+    };
+    revealRecogRef.current = r;
+    try { r.start(); } catch (_) {}
+  }
+
   function startRevealListening(ayahsList) {
     if (Platform.OS !== 'web') { alert('هذه الميزة تعمل على المتصفح فقط'); return; }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { alert('يحتاج Chrome أو Edge'); return; }
 
-    revealAyahsRef.current       = ayahsList;
-    currentRevealIdxRef.current  = 0;
-    isRevealListenRef.current    = true;
+    revealAyahsRef.current      = ayahsList;
+    currentRevealIdxRef.current = 0;
+    isRevealListenRef.current   = true;
     setRevealedAyahs(new Set());
     setErrorAyahs(new Set());
     setCurrentRevealIdx(0);
     setRevealAllDone(false);
+    setLastHeard('');
     setIsRevealListening(true);
-
-    function session() {
-      if (!isRevealListenRef.current) return;
-      const r = new SR();
-      r.lang = 'ar-SA'; r.continuous = false; r.interimResults = false;
-
-      r.onresult = e => {
-        let text = '';
-        for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript + ' ';
-        processRevealAyah(text);
-      };
-      r.onend = () => {
-        revealRecogRef.current = null;
-        if (isRevealListenRef.current) setTimeout(session, 150);
-      };
-      r.onerror = ev => { if (ev.error === 'no-speech' || ev.error === 'aborted') return; };
-      revealRecogRef.current = r;
-      try { r.start(); } catch (_) {}
-    }
-    session();
+    setTimeout(startRevealSession, 100);
   }
 
   function stopRevealListening() {
@@ -199,6 +226,7 @@ export default function MemorizerScreen({ navigation }) {
     setErrorAyahs(new Set());
     setCurrentRevealIdx(0);
     setRevealAllDone(false);
+    setLastHeard('');
     currentRevealIdxRef.current = 0;
   }
 
@@ -595,74 +623,8 @@ export default function MemorizerScreen({ navigation }) {
                 </View>
               )}
 
-              {/* ── Reveal mode: full circle grid overlay ── */}
-              {isRevealMode ? (
-                <View style={styles.revealGrid}>
-                  {displayAyahs.map((ayahObj, aIdx) => {
-                    const ayahNum   = isSeqMode ? ayahRange.start + seqOffset : ayahRange.start + aIdx;
-                    const isActive  = aIdx === currentRevealIdx && isRevealListening;
-                    const isDone    = revealedAyahs.has(aIdx);
-                    const hasError  = errorAyahs.has(aIdx);
-                    const isPending = !isDone && !hasError && aIdx !== currentRevealIdx;
-                    const isNext    = !isRevealListening && aIdx === currentRevealIdx && !revealAllDone;
-
-                    if (isDone || hasError) {
-                      // Revealed: show actual text
-                      return (
-                        <View key={aIdx} style={[styles.revealAyahCard, {
-                          borderColor: hasError ? COLORS.error + '80' : COLORS.success + '80',
-                          backgroundColor: hasError ? COLORS.error + '10' : COLORS.success + '10',
-                        }]}>
-                          <View style={[styles.revealAyahNumBadge, {
-                            backgroundColor: hasError ? COLORS.error : COLORS.success,
-                          }]}>
-                            <Text style={styles.revealAyahNumText}>{ayahNum}</Text>
-                          </View>
-                          <View style={styles.revealAyahTextWrapper}>
-                            {ayahObj.words.map((w, i) => (
-                              <Text key={i} style={[styles.revealAyahWord, { color: hasError ? COLORS.error : COLORS.success }]}>
-                                {w.text}{' '}
-                              </Text>
-                            ))}
-                          </View>
-                          <MaterialCommunityIcons
-                            name={hasError ? 'close-circle' : 'check-circle'}
-                            size={18}
-                            color={hasError ? COLORS.error : COLORS.success}
-                            style={{ marginTop: 6 }}
-                          />
-                        </View>
-                      );
-                    }
-
-                    // Hidden circle
-                    return (
-                      <View key={aIdx} style={[styles.revealCircleWrap, isActive && styles.revealCircleActive]}>
-                        <View style={[styles.revealCircle, {
-                          borderColor: isActive ? COLORS.primary : isNext ? COLORS.primary + '60' : (themeMode === 'dark' ? '#334' : '#ccd'),
-                          backgroundColor: isActive
-                            ? COLORS.primary + '25'
-                            : isNext
-                            ? COLORS.primary + '10'
-                            : (themeMode === 'dark' ? '#1a2233' : '#f0f0f8'),
-                          borderWidth: isActive ? 2.5 : 1.5,
-                        }]}>
-                          <Text style={[styles.revealCircleNum, {
-                            color: isActive ? COLORS.primary : isNext ? COLORS.primary : (themeMode === 'dark' ? '#8899aa' : '#99aabb'),
-                          }]}>
-                            {ayahNum}
-                          </Text>
-                          {isActive && (
-                            <View style={styles.revealCirclePulse} />
-                          )}
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              ) : (
-              /* ── Normal ayah rendering ── */
-              displayAyahs.map((ayahObj, aIdx) => {
+              {/* ── Normal ayah rendering ── */}
+              {displayAyahs.map((ayahObj, aIdx) => {
                 const ayahNum = isSeqMode ? ayahRange.start + seqOffset : ayahRange.start + aIdx;
                 const isCurrentlyPlaying = currentAyah === ayahNum && isPlaying;
                 const isCurrentAyah = currentAyah === ayahNum;
@@ -734,8 +696,7 @@ export default function MemorizerScreen({ navigation }) {
                     {/* Translation — hide English, show ayah number only */}
                   </View>
                 );
-              })
-              )}
+              })}
 
               {/* Group playing indicator */}
               {isPlaying && activeTab === 'listen' && (
@@ -821,76 +782,144 @@ export default function MemorizerScreen({ navigation }) {
           </View>
         )}
 
-        {/* ── Reveal Mode Panel (works in both tabs) ── */}
-        {isRevealMode && (
-          <View style={[styles.revealPanel, { backgroundColor: activeColors.surface, borderColor: COLORS.primary + '40' }]}>
-            <View style={styles.revealHeader}>
-              <TouchableOpacity onPress={resetRevealMode} style={styles.revealCloseBtn}>
-                <MaterialCommunityIcons name="close" size={16} color={activeColors.textSecondary} />
+        {/* ── Reveal Mode: Full-Screen Modal ── */}
+        <Modal visible={isRevealMode} animationType="slide" transparent={false} onRequestClose={resetRevealMode}>
+          <View style={styles.revealModalContainer}>
+
+            {/* Header */}
+            <View style={styles.revealModalHeader}>
+              <TouchableOpacity onPress={resetRevealMode} style={styles.revealModalClose}>
+                <MaterialCommunityIcons name="close" size={22} color="#fff" />
               </TouchableOpacity>
-              <Text style={[styles.revealTitle, { color: activeColors.text }]}>وضع التسميع المخفي</Text>
-              <MaterialCommunityIcons name="eye-off" size={18} color={COLORS.primary} />
+              <View style={{ alignItems: 'center' }}>
+                <Text style={styles.revealModalTitle}>التسميع المخفي</Text>
+                <Text style={styles.revealModalSubtitle}>
+                  {currentSurahObj?.name} · {isSeqMode ? `الآية ${ayahRange.start + seqOffset}` : `${ayahRange.start}–${ayahRange.end}`}
+                </Text>
+              </View>
+              <View style={styles.revealModalStats}>
+                <Text style={{ color: '#4ade80', fontWeight: 'bold', fontSize: 13 }}>✓{revealedAyahs.size}</Text>
+                <Text style={{ color: '#f87171', fontWeight: 'bold', fontSize: 13, marginTop: 2 }}>✗{errorAyahs.size}</Text>
+              </View>
             </View>
 
-            {revealAllDone ? (
-              <View style={{ alignItems: 'center', paddingVertical: 8, gap: 6 }}>
-                <Text style={{ color: errorAyahs.size === 0 ? COLORS.success : COLORS.error, fontWeight: 'bold', fontSize: 15 }}>
-                  {errorAyahs.size === 0 ? '🎉 ممتاز! جميع الآيات صحيحة' : `انتهى التسميع · ${errorAyahs.size} آية فيها خطأ`}
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <View style={[styles.revealStatBadge, { backgroundColor: COLORS.success + '20' }]}>
-                    <Text style={{ color: COLORS.success, fontWeight: 'bold', fontSize: 13 }}>✓ {revealedAyahs.size}</Text>
-                  </View>
-                  <View style={[styles.revealStatBadge, { backgroundColor: COLORS.error + '20' }]}>
-                    <Text style={{ color: COLORS.error, fontWeight: 'bold', fontSize: 13 }}>✗ {errorAyahs.size}</Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  onPress={() => startRevealListening(displayAyahs)}
-                  style={[styles.revealStartBtn, { backgroundColor: COLORS.primary + '20', borderColor: COLORS.primary }]}
-                >
-                  <MaterialCommunityIcons name="refresh" size={16} color={COLORS.primary} />
-                  <Text style={[styles.revealStartBtnText, { color: COLORS.primary }]}>إعادة التسميع</Text>
-                </TouchableOpacity>
-              </View>
-            ) : isRevealListening ? (
-              <View style={{ alignItems: 'center', gap: 8 }}>
-                <View style={styles.revealListeningRow}>
-                  <View style={[styles.revealPulse, { backgroundColor: COLORS.error }]} />
-                  <Text style={{ color: COLORS.error, fontWeight: 'bold', fontSize: 13 }}>
-                    يستمع… اقرأ الآية {(isSeqMode ? ayahRange.start + seqOffset : ayahRange.start) + currentRevealIdx}
-                  </Text>
-                </View>
-                <View style={styles.revealProgressRow}>
-                  <Text style={{ color: activeColors.textSecondary, fontSize: 12 }}>
-                    {currentRevealIdx} / {displayAyahs.length} آية
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 6 }}>
-                    <View style={[styles.revealStatBadge, { backgroundColor: COLORS.success + '20' }]}>
-                      <Text style={{ color: COLORS.success, fontWeight: 'bold', fontSize: 12 }}>✓ {revealedAyahs.size}</Text>
+            {/* Circle Grid */}
+            <ScrollView
+              ref={revealScrollRef}
+              contentContainerStyle={styles.revealModalGrid}
+              showsVerticalScrollIndicator={false}
+            >
+              {displayAyahs.map((ayahObj, aIdx) => {
+                const ayahNum  = isSeqMode ? ayahRange.start + seqOffset : ayahRange.start + aIdx;
+                const isActive = aIdx === currentRevealIdx;
+                const isDone   = revealedAyahs.has(aIdx);
+                const hasError = errorAyahs.has(aIdx);
+
+                if (isDone || hasError) {
+                  return (
+                    <View key={aIdx} style={[styles.revealDoneCard, {
+                      borderColor: hasError ? '#f87171' : '#4ade80',
+                      backgroundColor: hasError ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)',
+                    }]}>
+                      <View style={[styles.revealDoneNumBadge, { backgroundColor: hasError ? '#ef4444' : '#16a34a' }]}>
+                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>{ayahNum}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', paddingHorizontal: 4 }}>
+                        {ayahObj.words.map((w, i) => (
+                          <Text key={i} style={{ fontSize: 17, color: hasError ? '#f87171' : '#4ade80', lineHeight: 30, textAlign: 'center' }}>
+                            {w.text}{' '}
+                          </Text>
+                        ))}
+                      </View>
+                      <MaterialCommunityIcons name={hasError ? 'close-circle' : 'check-circle'} size={16} color={hasError ? '#f87171' : '#4ade80'} style={{ marginTop: 4 }} />
                     </View>
-                    <View style={[styles.revealStatBadge, { backgroundColor: COLORS.error + '20' }]}>
-                      <Text style={{ color: COLORS.error, fontWeight: 'bold', fontSize: 12 }}>✗ {errorAyahs.size}</Text>
+                  );
+                }
+
+                // Hidden circle
+                return (
+                  <View key={aIdx} style={styles.revealCircleWrap}>
+                    <View style={[styles.revealCircle, {
+                      borderColor: isActive ? '#0d9488' : 'rgba(255,255,255,0.2)',
+                      backgroundColor: isActive ? 'rgba(13,148,136,0.2)' : 'rgba(255,255,255,0.05)',
+                      borderWidth: isActive ? 2.5 : 1.5,
+                      width: isActive ? 70 : 58,
+                      height: isActive ? 70 : 58,
+                      borderRadius: isActive ? 35 : 29,
+                    }]}>
+                      <Text style={[styles.revealCircleNum, {
+                        color: isActive ? '#0d9488' : 'rgba(255,255,255,0.5)',
+                        fontSize: isActive ? 22 : 18,
+                      }]}>
+                        {ayahNum}
+                      </Text>
                     </View>
+                    {isActive && isRevealListening && (
+                      <View style={styles.revealActivePulse} />
+                    )}
                   </View>
-                </View>
-                <TouchableOpacity onPress={stopRevealListening}
-                  style={[styles.revealStartBtn, { backgroundColor: COLORS.error + '15', borderColor: COLORS.error }]}>
-                  <MaterialCommunityIcons name="stop" size={16} color={COLORS.error} />
-                  <Text style={[styles.revealStartBtnText, { color: COLORS.error }]}>إيقاف</Text>
-                </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* Last heard text */}
+            {lastHeard !== '' && isRevealListening && (
+              <View style={styles.revealLastHeard}>
+                <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginBottom: 2 }}>سُمع:</Text>
+                <Text style={{ color: '#fff', fontSize: 14, textAlign: 'center' }} numberOfLines={2}>{lastHeard}</Text>
               </View>
-            ) : (
-              <TouchableOpacity
-                onPress={() => startRevealListening(displayAyahs)}
-                style={[styles.revealStartBtn, { backgroundColor: COLORS.primary, borderColor: COLORS.primary }]}
-              >
-                <MaterialCommunityIcons name="microphone" size={16} color="#FFF" />
-                <Text style={[styles.revealStartBtnText, { color: '#FFF' }]}>ابدأ التسميع</Text>
-              </TouchableOpacity>
             )}
+
+            {/* Bottom Control Panel */}
+            <View style={styles.revealModalControls}>
+              {revealAllDone ? (
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ color: errorAyahs.size === 0 ? '#4ade80' : '#f87171', fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>
+                    {errorAyahs.size === 0 ? '🎉 ممتاز! جميع الآيات صحيحة' : `انتهى · ${errorAyahs.size} آية بها خطأ`}
+                  </Text>
+                  <TouchableOpacity onPress={() => startRevealListening(displayAyahs)} style={styles.revealBigBtn}>
+                    <MaterialCommunityIcons name="refresh" size={22} color="#fff" />
+                    <Text style={styles.revealBigBtnText}>إعادة التسميع</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : isRevealListening ? (
+                <View style={{ alignItems: 'center', width: '100%' }}>
+                  <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 6 }}>
+                    الآية {(isSeqMode ? ayahRange.start + seqOffset : ayahRange.start) + currentRevealIdx} · {currentRevealIdx}/{displayAyahs.length}
+                  </Text>
+                  <View style={styles.revealMicPulseRing}>
+                    <MaterialCommunityIcons name="microphone" size={32} color="#fff" />
+                  </View>
+                  <Text style={{ color: '#0d9488', fontWeight: 'bold', fontSize: 14, marginTop: 8, marginBottom: 12 }}>
+                    اقرأ الآية بصوت واضح…
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 12 }}>
+                    <TouchableOpacity
+                      onPress={() => advanceReveal(false)}
+                      style={[styles.revealSmallBtn, { borderColor: '#f87171' }]}
+                    >
+                      <Text style={{ color: '#f87171', fontWeight: 'bold' }}>تخطي ✗</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => advanceReveal(true)}
+                      style={[styles.revealSmallBtn, { borderColor: '#4ade80' }]}
+                    >
+                      <Text style={{ color: '#4ade80', fontWeight: 'bold' }}>صح ✓</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={stopRevealListening} style={[styles.revealSmallBtn, { borderColor: 'rgba(255,255,255,0.3)' }]}>
+                      <Text style={{ color: 'rgba(255,255,255,0.6)' }}>إيقاف</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity onPress={() => startRevealListening(displayAyahs)} style={styles.revealBigBtn}>
+                  <MaterialCommunityIcons name="microphone" size={24} color="#fff" />
+                  <Text style={styles.revealBigBtnText}>ابدأ التسميع</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-        )}
+        </Modal>
 
         {/* Listen Mode Controls */}
         {activeTab === 'listen' && (
@@ -2460,80 +2489,146 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 12,
   },
-  // Reveal grid styles
-  revealGrid: {
+  // ── Reveal Mode Modal styles ──
+  revealModalContainer: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  revealModalHeader: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    paddingTop: 50,
+    backgroundColor: '#1e293b',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  revealModalClose: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  revealModalTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  revealModalSubtitle: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  revealModalStats: {
+    alignItems: 'center',
+    minWidth: 36,
+  },
+  revealModalGrid: {
     flexDirection: 'row-reverse',
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-    gap: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
   },
   revealCircleWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 4,
-  },
-  revealCircleActive: {
-    transform: [{ scale: 1.15 }],
-  },
-  revealCircle: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
+    margin: 6,
     position: 'relative',
   },
-  revealCircleNum: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    fontFamily: 'System',
+  revealCircle: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  revealCirclePulse: {
+  revealCircleNum: {
+    fontWeight: 'bold',
+  },
+  revealActivePulse: {
     position: 'absolute',
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     borderWidth: 2,
     borderColor: '#0d9488',
-    opacity: 0.4,
+    opacity: 0.35,
+    top: -7,
+    left: -7,
   },
-  revealAyahCard: {
+  revealDoneCard: {
     borderWidth: 1.5,
     borderRadius: 14,
     padding: 12,
-    marginHorizontal: 2,
-    marginVertical: 4,
-    width: '100%',
+    marginHorizontal: 6,
+    marginVertical: 5,
+    width: '92%',
     alignItems: 'center',
   },
-  revealAyahNumBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+  revealDoneNumBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
     marginBottom: 8,
   },
-  revealAyahNumText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
+  revealLastHeard: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginHorizontal: 16,
+    marginBottom: 4,
+    borderRadius: 10,
+    padding: 8,
+    alignItems: 'center',
   },
-  revealAyahTextWrapper: {
-    flexDirection: 'row-reverse',
-    flexWrap: 'wrap',
+  revealModalControls: {
+    backgroundColor: '#1e293b',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    paddingBottom: 36,
+  },
+  revealBigBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0d9488',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 30,
+    gap: 10,
+  },
+  revealBigBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  revealSmallBtn: {
+    borderWidth: 1.5,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  revealMicPulseRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#0d9488',
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  revealAyahWord: {
-    fontSize: 18,
-    fontFamily: 'System',
-    lineHeight: 32,
-    textAlign: 'center',
-  },
+  // (legacy, kept for backward compat)
+  revealGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center' },
+  revealAyahCard: { borderWidth: 1, borderRadius: 12, padding: 10 },
+  revealAyahNumBadge: { width: 28, height: 28, borderRadius: 14 },
+  revealAyahNumText: { color: '#fff', fontWeight: 'bold' },
+  revealAyahTextWrapper: { flexDirection: 'row-reverse', flexWrap: 'wrap' },
+  revealAyahWord: { fontSize: 17, lineHeight: 30 },
+  revealCircleActive: {},
+  revealCirclePulse: {},
 
   hiddenWordBlock: {
     paddingHorizontal: 6,
