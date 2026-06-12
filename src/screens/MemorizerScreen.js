@@ -1,16 +1,33 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  ScrollView, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  ActivityIndicator, 
-  Animated, 
-  Modal, 
-  Dimensions 
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  ActivityIndicator,
+  Animated,
+  Modal,
+  Dimensions,
+  Platform,
 } from 'react-native';
+
+/* ── Beep sound on mistake (web only) ── */
+function playBeep() {
+  if (Platform.OS !== 'web') return;
+  try {
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.55);
+    setTimeout(() => ctx.close(), 1200);
+  } catch (_) {}
+}
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SIZES, SHADOWS } from '../constants/Theme';
@@ -81,6 +98,14 @@ export default function MemorizerScreen({ navigation }) {
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [durationSecs, setDurationSecs] = useState(0);
   const timerRef = useRef(null);
+
+  // Sequential (آية بآية) mode
+  const [isSeqMode, setIsSeqMode]   = useState(false);
+  const [seqOffset, setSeqOffset]   = useState(0); // index within rangeAyahs
+  const [completedSeq, setCompletedSeq] = useState([]); // past results
+
+  // Reset sequential progress when range or surah changes
+  useEffect(() => { setSeqOffset(0); setCompletedSeq([]); setEvaluationResult(null); }, [selectedSurahIndex, ayahRange.start, ayahRange.end]);
 
   // Waveform animation ref
   const waveAnims = useRef(Array(8).fill(0).map(() => new Animated.Value(4))).current;
@@ -199,13 +224,16 @@ export default function MemorizerScreen({ navigation }) {
     try {
       let recitationReport;
 
-      // Combine all words from the selected ayah range
-      const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, ayahRange.end);
-      const groupWords = rangeAyahs.flatMap(a => a.words || []);
+      // In sequential mode evaluate only the current single ayah
+      const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 7);
+      const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, clampedEnd);
+      const targetAyahs = isSeqMode ? [rangeAyahs[seqOffset]].filter(Boolean) : rangeAyahs;
+      const groupWords  = targetAyahs.flatMap(a => a.words || []);
+      const refAyah     = ayahRange.start + (isSeqMode ? seqOffset : 0);
 
       if (isOfflineGraderMode) {
         await new Promise(resolve => setTimeout(resolve, 1500));
-        recitationReport = getMockCorrection(groupWords, ayahRange.start);
+        recitationReport = getMockCorrection(groupWords, refAyah);
       } else {
         const transcription = await transcribeAudio(uri, apiKey);
         recitationReport = evaluateRecitation(groupWords, transcription);
@@ -215,8 +243,22 @@ export default function MemorizerScreen({ navigation }) {
 
       setEvaluationResult(recitationReport);
 
-      // Save result to History log (use range start ayah as reference)
-      addHistoryLog(currentSurahObj.id, ayahRange.start, recitationReport.score, recitationReport.feedback);
+      // 🔔 Beep when there are errors
+      const hasErrors = recitationReport.score < 100 ||
+        (recitationReport.tajweedErrors && recitationReport.tajweedErrors.length > 0);
+      if (hasErrors) playBeep();
+
+      // Save to history
+      addHistoryLog(currentSurahObj.id, refAyah, recitationReport.score, recitationReport.feedback);
+
+      // In sequential mode, save result to completed list
+      if (isSeqMode) {
+        setCompletedSeq(prev => [...prev, {
+          ayahNum: refAyah,
+          score: recitationReport.score,
+          hasErrors,
+        }]);
+      }
     } catch (e) {
       console.error(e);
       alert(e.message === 'API_KEY_MISSING'
@@ -225,6 +267,20 @@ export default function MemorizerScreen({ navigation }) {
       );
     } finally {
       setIsEvaluating(false);
+    }
+  };
+
+  // Advance to next ayah in sequential mode
+  const handleSeqNext = () => {
+    const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 7);
+    const total = clampedEnd - ayahRange.start + 1;
+    setEvaluationResult(null);
+    if (seqOffset + 1 < total) {
+      setSeqOffset(o => o + 1);
+    } else {
+      // Finished all ayahs
+      setIsSeqMode(false);
+      setSeqOffset(0);
     }
   };
 
@@ -242,6 +298,9 @@ export default function MemorizerScreen({ navigation }) {
   // All ayahs in the selected range (max 8) to display in the board
   const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 7);
   const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, clampedEnd);
+  // In sequential mode show only the current ayah
+  const displayAyahs = isSeqMode ? rangeAyahs.slice(seqOffset, seqOffset + 1) : rangeAyahs;
+  const seqTotal = rangeAyahs.length;
 
   // Tafsir for current surah
   const currentTafsir = getTafsir(
@@ -395,7 +454,7 @@ export default function MemorizerScreen({ navigation }) {
             </View>
           ) : (
             <>
-              {/* Board header: range info + group repeat indicator */}
+              {/* Board header */}
               <View style={styles.boardHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   {isPlaying && activeTab === 'listen' && (
@@ -406,15 +465,40 @@ export default function MemorizerScreen({ navigation }) {
                       </Text>
                     </View>
                   )}
+                  {isSeqMode && (
+                    <View style={[styles.groupRepBadge, { backgroundColor: COLORS.primary + '20' }]}>
+                      <Text style={[styles.groupRepText, { color: COLORS.primary }]}>
+                        {seqOffset + 1}/{seqTotal}
+                      </Text>
+                    </View>
+                  )}
                 </View>
                 <Text style={[styles.ayahIndicatorText, { color: activeColors.textSecondary }]}>
-                  الآيات {ayahRange.start}–{ayahRange.end} · {rangeAyahs.length} آية
+                  {isSeqMode
+                    ? `الآية ${ayahRange.start + seqOffset} · تسميع متسلسل`
+                    : `الآيات ${ayahRange.start}–${ayahRange.end} · ${rangeAyahs.length} آية`}
                 </Text>
               </View>
 
-              {/* All ayahs in range */}
-              {rangeAyahs.map((ayahObj, aIdx) => {
-                const ayahNum = ayahRange.start + aIdx;
+              {/* Completed ayahs indicators in seq mode */}
+              {isSeqMode && completedSeq.length > 0 && (
+                <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                  {completedSeq.map((r, i) => (
+                    <View key={i} style={{
+                      paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20,
+                      backgroundColor: r.hasErrors ? COLORS.error + '20' : COLORS.success + '20',
+                    }}>
+                      <Text style={{ fontSize: 11, fontWeight: 'bold', color: r.hasErrors ? COLORS.error : COLORS.success }}>
+                        {r.ayahNum} · {r.score}%
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Ayahs in range (or single ayah in seq mode) */}
+              {displayAyahs.map((ayahObj, aIdx) => {
+                const ayahNum = isSeqMode ? ayahRange.start + seqOffset : ayahRange.start + aIdx;
                 const isCurrentlyPlaying = currentAyah === ayahNum && isPlaying;
                 const isCurrentAyah = currentAyah === ayahNum;
 
@@ -660,7 +744,25 @@ export default function MemorizerScreen({ navigation }) {
         {/* Recite & Correction Mode Controls */}
         {activeTab === 'recite' && (
           <View style={styles.voiceSection}>
-            
+
+            {/* ── Sequential mode toggle ── */}
+            <TouchableOpacity
+              onPress={() => { setIsSeqMode(v => !v); setSeqOffset(0); setCompletedSeq([]); setEvaluationResult(null); }}
+              style={[styles.seqToggleBtn, {
+                backgroundColor: isSeqMode ? COLORS.primary : COLORS.primary + '15',
+                borderColor: COLORS.primary,
+              }]}
+            >
+              <MaterialCommunityIcons
+                name={isSeqMode ? 'format-list-numbered' : 'format-list-numbered'}
+                size={16}
+                color={isSeqMode ? '#FFF' : COLORS.primary}
+              />
+              <Text style={[styles.seqToggleText, { color: isSeqMode ? '#FFF' : COLORS.primary }]}>
+                {isSeqMode ? `وضع التسميع آية بآية · ${seqOffset + 1}/${seqTotal}` : 'تسميع آية بآية'}
+              </Text>
+            </TouchableOpacity>
+
             {/* Recording State UI */}
             {isRecording ? (
               <View style={[styles.recordingCard, { backgroundColor: COLORS.error + '08', borderColor: COLORS.error + '30' }]}>
@@ -909,6 +1011,19 @@ export default function MemorizerScreen({ navigation }) {
                 <Text style={[styles.resultFeedback, { color: activeColors.textSecondary }]}>
                   {evaluationResult.feedback}
                 </Text>
+
+                {/* Next ayah button in sequential mode */}
+                {isSeqMode && (
+                  <TouchableOpacity
+                    onPress={handleSeqNext}
+                    style={[styles.seqNextBtn, { backgroundColor: COLORS.primary }]}
+                  >
+                    <Text style={styles.seqNextBtnText}>
+                      {seqOffset + 1 < seqTotal ? `التالية ← الآية ${ayahRange.start + seqOffset + 1}` : '✓ انتهى التسميع'}
+                    </Text>
+                    <MaterialCommunityIcons name="arrow-left" size={18} color="#FFF" />
+                  </TouchableOpacity>
+                )}
 
                 {/* Compare buttons */}
                 <View style={[styles.divider, { backgroundColor: activeColors.border }]} />
@@ -2019,6 +2134,37 @@ const styles = StyleSheet.create({
   },
   juzBadgeText: {
     fontSize: 9,
+    fontWeight: 'bold',
+  },
+
+  // Sequential mode
+  seqToggleBtn: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    marginBottom: 12,
+  },
+  seqToggleText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  seqNextBtn: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  seqNextBtnText: {
+    color: '#FFF',
+    fontSize: 14,
     fontWeight: 'bold',
   },
 
