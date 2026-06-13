@@ -181,15 +181,14 @@ export default function MemorizerScreen({ navigation }) {
     setLastHeard(text.trim());
     const ratio = scoreAyah(text, ayahs[idx]?.words || []);
 
-    if (ratio >= 0.30) {
-      // ✅ صحيح — اكشف الآية وانتقل للتالية
+    if (ratio >= 0.12 || text.trim().split(/\s+/).length >= 2) {
+      // ✅ قراءة مقبولة — اكشف الآية خضراء وانتقل للتالية
       setCurrentAyahError(false);
       advanceReveal(true);
     } else {
-      // ❌ خطأ — صافرة + ابقَ في نفس الآية للتصحيح
+      // ❌ خطأ واضح جداً — صافرة + أعد المحاولة
       playBeep();
       setCurrentAyahError(true);
-      // لا تتقدم — استمر في الاستماع لنفس الآية
     }
   }
 
