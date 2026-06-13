@@ -181,12 +181,19 @@ export default function MemorizerScreen({ navigation }) {
     setLastHeard(text.trim());
     const ratio = scoreAyah(text, ayahs[idx]?.words || []);
 
-    if (ratio >= 0.12 || text.trim().split(/\s+/).length >= 2) {
-      // ✅ قراءة مقبولة — اكشف الآية خضراء وانتقل للتالية
+    // تحقق أن كلمة واحدة على الأقل من الآية موجودة في الكلام
+    const spoken = normalizeAr(text).split(/\s+/).filter(w => w.length >= 2);
+    const target = (ayahs[idx]?.words || []).map(w => normalizeAr(w.text)).filter(w => w.length >= 2);
+    const anyMatch = spoken.length > 0 && spoken.some(sw => target.some(tw =>
+      tw === sw || tw.startsWith(sw) || sw.startsWith(tw) || tw.includes(sw)
+    ));
+
+    if (anyMatch) {
+      // ✅ توجد كلمة مطابقة — آية خضراء وانتقال تلقائي
       setCurrentAyahError(false);
       advanceReveal(true);
     } else {
-      // ❌ خطأ واضح جداً — صافرة + أعد المحاولة
+      // ❌ لا يوجد أي تطابق — صافرة + أعد المحاولة
       playBeep();
       setCurrentAyahError(true);
     }
@@ -205,7 +212,6 @@ export default function MemorizerScreen({ navigation }) {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) {
           finalText += e.results[i][0].transcript + ' ';
-          // انكشف فوراً عند النتيجة النهائية بدون انتظار onend
           if (!processed) { processed = true; processRevealSpeech(finalText); }
         } else {
           interim = e.results[i][0].transcript;
@@ -215,12 +221,16 @@ export default function MemorizerScreen({ navigation }) {
     };
     r.onend = () => {
       revealRecogRef.current = null;
-      // إذا لم تُعالج (لم يأتِ finalText) استخدم ما سُمع مؤقتاً
       if (!processed && finalText.trim()) { processed = true; processRevealSpeech(finalText); }
-      if (isRevealListenRef.current) setTimeout(startRevealSession, 150);
+      // دائماً أعد التشغيل ما لم يُوقف المستخدم
+      if (isRevealListenRef.current) setTimeout(startRevealSession, 200);
     };
     r.onerror = ev => {
-      if (ev.error === 'no-speech') { if (isRevealListenRef.current) setTimeout(startRevealSession, 300); }
+      revealRecogRef.current = null;
+      // أعد التشغيل عند أي خطأ (عدا الإيقاف المتعمد)
+      if (ev.error !== 'aborted' && isRevealListenRef.current) {
+        setTimeout(startRevealSession, 400);
+      }
     };
     revealRecogRef.current = r;
     try { r.start(); } catch (_) {}
