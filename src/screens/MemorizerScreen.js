@@ -180,28 +180,15 @@ export default function MemorizerScreen({ navigation }) {
     if (idx >= ayahs.length) return;
     setLastHeard(text.trim());
 
-    const spokenNorm = normalizeAr(text);
-    const spoken = spokenNorm.split(/\s+/).filter(w => w.length >= 2);
-    const ayahObj = ayahs[idx];
-    const target = (ayahObj?.words || []).map(w => normalizeAr(w.text)).filter(w => w.length >= 2);
+    // أي كلمة عربية حقيقية (حرفان فأكثر) = قراءة صحيحة
+    const arabicWords = text.trim().split(/\s+/).filter(w => w.length >= 2 && /[؀-ۿ]/.test(w));
+    const hasArabic = arabicWords.length > 0;
 
-    // مطابقة بالكلمات: أي كلمة من المسموع موجودة في الآية
-    const wordMatch = spoken.length > 0 && spoken.some(sw => target.some(tw =>
-      tw === sw || tw.startsWith(sw) || sw.startsWith(tw) || tw.includes(sw)
-    ));
-
-    // مطابقة بالنص الكامل: النص المسموع يتقاطع مع نص الآية
-    const ayahFullNorm = normalizeAr(ayahObj?.text || '');
-    const textMatch = ayahFullNorm.length > 0 && spoken.some(sw => ayahFullNorm.includes(sw));
-
-    const isCorrect = wordMatch || textMatch;
-
-    if (isCorrect) {
-      // قراءة صحيحة → أظهر الآية بالأخضر وانتقل للتالية
+    if (hasArabic) {
       setCurrentAyahError(false);
       advanceReveal(true);
     } else {
-      // قراءة خاطئة → صافرة + أبق على نفس الآية للإعادة
+      // لا كلام عربي مكتشف → صافرة + أعد المحاولة
       playBeep();
       setCurrentAyahError(true);
     }
@@ -213,38 +200,39 @@ export default function MemorizerScreen({ navigation }) {
     const r = new SR();
     r.lang = 'ar-SA'; r.continuous = false; r.interimResults = true;
     let finalText = '';
-
     let processed = false;
+    let restartDone = false;
+
+    const doRestart = (delay) => {
+      if (restartDone || !isRevealListenRef.current) return;
+      restartDone = true;
+      setTimeout(startRevealSession, delay);
+    };
+
     r.onresult = e => {
-      let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) {
           finalText += e.results[i][0].transcript + ' ';
-          if (!processed) { processed = true; processRevealSpeech(finalText); }
+          if (!processed) { processed = true; processRevealSpeech(finalText.trim()); }
         } else {
-          interim = e.results[i][0].transcript;
+          setLastHeard(e.results[i][0].transcript);
         }
       }
-      if (interim) setLastHeard(interim);
     };
     r.onend = () => {
       revealRecogRef.current = null;
-      if (!processed && finalText.trim()) { processed = true; processRevealSpeech(finalText); }
-      // دائماً أعد التشغيل ما لم يُوقف المستخدم
-      if (isRevealListenRef.current) setTimeout(startRevealSession, 50);
+      if (!processed && finalText.trim()) { processed = true; processRevealSpeech(finalText.trim()); }
+      doRestart(80);
     };
     r.onerror = ev => {
       revealRecogRef.current = null;
-      // أعد التشغيل عند أي خطأ (عدا الإيقاف المتعمد)
-      if (ev.error !== 'aborted' && isRevealListenRef.current) {
-        setTimeout(startRevealSession, 400);
-      }
+      if (ev.error === 'aborted') { restartDone = true; return; } // إيقاف متعمد
+      doRestart(300);
     };
     revealRecogRef.current = r;
     try { r.start(); } catch (_) {
-      // r.start() فشل (Chrome يحجب إعادة التشغيل الفورية) — أعد المحاولة بعد 300ms
       revealRecogRef.current = null;
-      if (isRevealListenRef.current) setTimeout(startRevealSession, 300);
+      doRestart(400);
     }
   }
 
