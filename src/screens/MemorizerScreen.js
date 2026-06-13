@@ -115,7 +115,8 @@ export default function MemorizerScreen({ navigation }) {
   const [isRevealListening,  setIsRevealListening]  = useState(false);
   const [revealAllDone,      setRevealAllDone]       = useState(false);
   const [lastHeard,          setLastHeard]           = useState('');
-  const [isSheikhReveal,     setIsSheikhReveal]     = useState(false); // وضع الشيخ
+  const [isSheikhReveal,     setIsSheikhReveal]     = useState(false);
+  const [currentAyahError,   setCurrentAyahError]   = useState(false); // خطأ في الآية الحالية
   const revealRecogRef       = useRef(null);
   const isRevealListenRef    = useRef(false);
   const currentRevealIdxRef  = useRef(0);
@@ -154,11 +155,13 @@ export default function MemorizerScreen({ navigation }) {
     const ayahs = revealAyahsRef.current;
     if (idx >= ayahs.length) return;
 
+    setCurrentAyahError(false);
+    setLastHeard('');
+
     if (isCorrect) {
       setRevealedAyahs(prev => new Set([...prev, idx]));
     } else {
       setErrorAyahs(prev => new Set([...prev, idx]));
-      playBeep();
     }
 
     const nextIdx = idx + 1;
@@ -177,10 +180,17 @@ export default function MemorizerScreen({ navigation }) {
     if (idx >= ayahs.length) return;
     setLastHeard(text.trim());
     const ratio = scoreAyah(text, ayahs[idx]?.words || []);
-    // صافرة فقط إذا كان الخطأ واضحاً جداً (أقل من 20%)
-    if (ratio < 0.20 && text.trim().length > 3) playBeep();
-    // الآية تنكشف تلقائياً دائماً بعد أي كلام
-    advanceReveal(true);
+
+    if (ratio >= 0.30) {
+      // ✅ صحيح — اكشف الآية وانتقل للتالية
+      setCurrentAyahError(false);
+      advanceReveal(true);
+    } else {
+      // ❌ خطأ — صافرة + ابقَ في نفس الآية للتصحيح
+      playBeep();
+      setCurrentAyahError(true);
+      // لا تتقدم — استمر في الاستماع لنفس الآية
+    }
   }
 
   function startRevealSession() {
@@ -894,18 +904,20 @@ export default function MemorizerScreen({ navigation }) {
                 }
 
                 // Hidden circle
+                const activeError = isActive && currentAyahError;
+                const circleColor = activeError ? '#dc2626' : isActive ? '#0d9488' : 'rgba(255,255,255,0.2)';
                 return (
                   <View key={aIdx} style={styles.revealCircleWrap}>
                     <View style={[styles.revealCircle, {
-                      borderColor: isActive ? '#0d9488' : 'rgba(255,255,255,0.2)',
-                      backgroundColor: isActive ? 'rgba(13,148,136,0.2)' : 'rgba(255,255,255,0.05)',
+                      borderColor: circleColor,
+                      backgroundColor: activeError ? 'rgba(220,38,38,0.2)' : isActive ? 'rgba(13,148,136,0.2)' : 'rgba(255,255,255,0.05)',
                       borderWidth: isActive ? 2.5 : 1.5,
                       width: isActive ? 70 : 58,
                       height: isActive ? 70 : 58,
                       borderRadius: isActive ? 35 : 29,
                     }]}>
                       <Text style={[styles.revealCircleNum, {
-                        color: isActive ? '#0d9488' : 'rgba(255,255,255,0.5)',
+                        color: circleColor,
                         fontSize: isActive ? 22 : 18,
                       }]}>
                         {ayahNum}
@@ -987,22 +999,41 @@ export default function MemorizerScreen({ navigation }) {
                   <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 6 }}>
                     الآية {(isSeqMode ? ayahRange.start + seqOffset : ayahRange.start) + currentRevealIdx} · {currentRevealIdx}/{displayAyahs.length}
                   </Text>
-                  <View style={styles.revealMicPulseRing}>
-                    <MaterialCommunityIcons name="microphone" size={32} color="#fff" />
-                  </View>
-                  <Text style={{ color: '#0d9488', fontWeight: 'bold', fontSize: 14, marginTop: 8, marginBottom: 12 }}>
-                    اقرأ الآية بصوت واضح…
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 12 }}>
+
+                  {/* مؤشر الخطأ أو الاستماع */}
+                  {currentAyahError ? (
+                    <View style={{ alignItems: 'center', marginBottom: 8 }}>
+                      <View style={[styles.revealMicPulseRing, { backgroundColor: '#dc2626' }]}>
+                        <MaterialCommunityIcons name="alert" size={32} color="#fff" />
+                      </View>
+                      <Text style={{ color: '#f87171', fontWeight: 'bold', fontSize: 15, marginTop: 8 }}>
+                        خطأ — أعد قراءة الآية
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 4 }}>
+                        سيستمع مجدداً…
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={{ alignItems: 'center', marginBottom: 8 }}>
+                      <View style={styles.revealMicPulseRing}>
+                        <MaterialCommunityIcons name="microphone" size={32} color="#fff" />
+                      </View>
+                      <Text style={{ color: '#0d9488', fontWeight: 'bold', fontSize: 14, marginTop: 8 }}>
+                        اقرأ الآية بصوت واضح…
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={{ flexDirection: 'row', marginTop: 8 }}>
                     <TouchableOpacity
                       onPress={() => advanceReveal(false)}
-                      style={[styles.revealSmallBtn, { borderColor: '#f87171' }]}
+                      style={[styles.revealSmallBtn, { borderColor: '#f87171', marginRight: 8 }]}
                     >
                       <Text style={{ color: '#f87171', fontWeight: 'bold' }}>تخطي ✗</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => advanceReveal(true)}
-                      style={[styles.revealSmallBtn, { borderColor: '#4ade80' }]}
+                      style={[styles.revealSmallBtn, { borderColor: '#4ade80', marginRight: 8 }]}
                     >
                       <Text style={{ color: '#4ade80', fontWeight: 'bold' }}>صح ✓</Text>
                     </TouchableOpacity>
