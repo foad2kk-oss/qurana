@@ -188,15 +188,10 @@ export default function MemorizerScreen({ navigation }) {
       tw === sw || tw.startsWith(sw) || sw.startsWith(tw) || tw.includes(sw)
     ));
 
-    if (anyMatch) {
-      // ✅ توجد كلمة مطابقة — آية خضراء وانتقال تلقائي
-      setCurrentAyahError(false);
-      advanceReveal(true);
-    } else {
-      // ❌ لا يوجد أي تطابق — صافرة + أعد المحاولة
-      playBeep();
-      setCurrentAyahError(true);
-    }
+    // صافرة إذا لم يطابق أي شيء، لكن الآية تنكشف دائماً
+    if (!anyMatch) playBeep();
+    setCurrentAyahError(false);
+    advanceReveal(true);
   }
 
   function startRevealSession() {
