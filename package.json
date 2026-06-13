@@ -33,11 +33,5 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "overrides": {
-    "ws": "^8.18.0"
-  },
-  "private": true,
-  "devDependencies": {
-    "ws": "^7.5.11"
-  }
+  "private": true
 }
