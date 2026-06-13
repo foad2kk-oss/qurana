@@ -122,7 +122,7 @@ body{background:#0d1117;color:#e2e8f0;font-family:'Cairo',sans-serif;min-height:
 
 <script>
 var allSurahs=[], ayahs=[], curIdx=0, okCnt=0, errCnt=0;
-var listening=false, recog=null, advancing=false;
+var listening=false, recog=null, advancing=false, cooldownUntil=0;
 
 // ---- beep ----
 function beep(){
@@ -139,18 +139,31 @@ function beep(){
 }
 
 // ---- process spoken text ----
+function stripTashkeel(t){
+  return t.replace(/[ؐ-ًؚ-ٰٟ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه');
+}
+
+function ayahWordCount(idx){
+  var words=stripTashkeel(ayahs[idx].text).trim().split(/\s+/).filter(function(w){return w.length>=2;});
+  return words.length;
+}
+
 function onSpoken(text, isFinal){
   if(curIdx>=ayahs.length||advancing) return;
+  if(Date.now()<cooldownUntil) return;
   var txt=text.trim();
   document.getElementById('heard').textContent=txt?('&#128249; '+txt):'';
 
-  // any Arabic word (2+ chars) = CORRECT
-  var arabicWords=txt.split(/\s+/).filter(function(w){return w.length>=2&&/[؀-ۿ]/.test(w);});
-  if(arabicWords.length>0){
+  if(!isFinal) return;
+
+  var spokenWords=txt.split(/\s+/).filter(function(w){return w.length>=2&&/[؀-ۿ]/.test(w);});
+  var needed=Math.max(2, Math.ceil(ayahWordCount(curIdx)*0.6));
+
+  if(spokenWords.length>=needed){
     advancing=true;
+    cooldownUntil=Date.now()+2000;
     doReveal();
-  } else if(isFinal && txt.length>0){
-    // final result with no Arabic = wrong
+  } else {
     doError();
   }
 }
@@ -178,8 +191,7 @@ function doReveal(){
   }
   activateCircle(curIdx);
   setStt('اقرأ الآية '+ayahs[curIdx].numberInSurah+'…');
-  // small pause then resume
-  setTimeout(function(){advancing=false;},400);
+  setTimeout(function(){advancing=false;},300);
 }
 
 function doError(){
@@ -251,8 +263,8 @@ function runSession(){
 
   r.onend=function(){
     recog=null;
-    // If user just correctly read → short pause before restart (doReveal sets advancing=false after 400ms)
-    restart(advancing?500:60);
+    var remaining=cooldownUntil-Date.now();
+    restart(remaining>0?remaining+100:60);
   };
 
   r.onerror=function(ev){
@@ -297,7 +309,7 @@ function buildGrid(){
 
 // ---- session start/reset/end ----
 function startSession(list,title){
-  ayahs=list;curIdx=0;okCnt=0;errCnt=0;advancing=false;
+  ayahs=list;curIdx=0;okCnt=0;errCnt=0;advancing=false;cooldownUntil=0;
   document.getElementById('stOk').innerHTML='&#10003; 0';
   document.getElementById('stErr').innerHTML='&#10007; 0';
   document.getElementById('hdr-title').textContent=title;
@@ -315,7 +327,7 @@ function startSession(list,title){
 
 function resetSess(){
   stopListen();
-  curIdx=0;okCnt=0;errCnt=0;advancing=false;
+  curIdx=0;okCnt=0;errCnt=0;advancing=false;cooldownUntil=0;
   document.getElementById('stOk').innerHTML='&#10003; 0';
   document.getElementById('stErr').innerHTML='&#10007; 0';
   document.getElementById('done').style.display='none';
