@@ -129,13 +129,22 @@ export default function MemorizerScreen({ navigation }) {
 
   function scoreAyah(spokenText, ayahWords) {
     const spoken = normalizeAr(spokenText).split(/\s+/).filter(Boolean);
-    if (!spoken.length || !ayahWords.length) return 0;
-    let matches = 0;
+    if (!spoken.length) return 0;
+    if (!ayahWords.length) return 1;
     const targetNorm = ayahWords.map(w => normalizeAr(w.text));
+    let matches = 0;
     spoken.forEach(sw => {
-      if (targetNorm.some(tw => tw === sw || tw.includes(sw) || sw.includes(tw))) matches++;
+      if (sw.length < 2) return; // تجاهل الكلمات القصيرة جداً
+      if (targetNorm.some(tw =>
+        tw === sw ||
+        tw.startsWith(sw) ||
+        sw.startsWith(tw) ||
+        tw.includes(sw) ||
+        sw.includes(tw)
+      )) matches++;
     });
-    return matches / Math.max(spoken.length, ayahWords.length);
+    // نقيس بعدد الكلمات المنطوقة فقط (لا بعدد كلمات الآية كلها)
+    return matches / spoken.length;
   }
 
   function advanceReveal(isCorrect) {
@@ -166,7 +175,7 @@ export default function MemorizerScreen({ navigation }) {
     if (idx >= ayahs.length) return;
     setLastHeard(text.trim());
     const ratio = scoreAyah(text, ayahs[idx]?.words || []);
-    advanceReveal(ratio >= 0.45);
+    advanceReveal(ratio >= 0.35); // 35% من الكلمات المنطوقة تطابق = صحيح
   }
 
   function startRevealSession() {
