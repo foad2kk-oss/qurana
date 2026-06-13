@@ -2709,4 +2709,5 @@ const styles = StyleSheet.create({
     fontSize: SIZES.fontXs - 1,
     marginTop: 2,
   },
+  _v: { display: 'none' }, // v2.1 - no dots
 });
