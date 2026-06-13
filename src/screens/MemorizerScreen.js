@@ -179,19 +179,22 @@ export default function MemorizerScreen({ navigation }) {
     const ayahs = revealAyahsRef.current;
     if (idx >= ayahs.length) return;
     setLastHeard(text.trim());
-    const ratio = scoreAyah(text, ayahs[idx]?.words || []);
 
-    // تحقق أن كلمة واحدة على الأقل من الآية موجودة في الكلام
     const spoken = normalizeAr(text).split(/\s+/).filter(w => w.length >= 2);
     const target = (ayahs[idx]?.words || []).map(w => normalizeAr(w.text)).filter(w => w.length >= 2);
     const anyMatch = spoken.length > 0 && spoken.some(sw => target.some(tw =>
       tw === sw || tw.startsWith(sw) || sw.startsWith(tw) || tw.includes(sw)
     ));
 
-    // صافرة إذا لم يطابق أي شيء، لكن الآية تنكشف دائماً
-    if (!anyMatch) playBeep();
-    setCurrentAyahError(false);
-    advanceReveal(true);
+    if (anyMatch) {
+      // قراءة صحيحة → أظهر الآية بالأخضر وانتقل للتالية
+      setCurrentAyahError(false);
+      advanceReveal(true);
+    } else {
+      // قراءة خاطئة → صافرة + أبق على نفس الآية للإعادة
+      playBeep();
+      setCurrentAyahError(true);
+    }
   }
 
   function startRevealSession() {
@@ -218,7 +221,7 @@ export default function MemorizerScreen({ navigation }) {
       revealRecogRef.current = null;
       if (!processed && finalText.trim()) { processed = true; processRevealSpeech(finalText); }
       // دائماً أعد التشغيل ما لم يُوقف المستخدم
-      if (isRevealListenRef.current) setTimeout(startRevealSession, 200);
+      if (isRevealListenRef.current) setTimeout(startRevealSession, 50);
     };
     r.onerror = ev => {
       revealRecogRef.current = null;
@@ -1028,19 +1031,7 @@ export default function MemorizerScreen({ navigation }) {
                     </View>
                   )}
 
-                  <View style={{ flexDirection: 'row', marginTop: 8 }}>
-                    <TouchableOpacity
-                      onPress={() => advanceReveal(false)}
-                      style={[styles.revealSmallBtn, { borderColor: '#f87171', marginRight: 8 }]}
-                    >
-                      <Text style={{ color: '#f87171', fontWeight: 'bold' }}>تخطي ✗</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => advanceReveal(true)}
-                      style={[styles.revealSmallBtn, { borderColor: '#4ade80', marginRight: 8 }]}
-                    >
-                      <Text style={{ color: '#4ade80', fontWeight: 'bold' }}>صح ✓</Text>
-                    </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', marginTop: 8, justifyContent: 'center' }}>
                     <TouchableOpacity onPress={stopRevealListening} style={[styles.revealSmallBtn, { borderColor: 'rgba(255,255,255,0.3)' }]}>
                       <Text style={{ color: 'rgba(255,255,255,0.6)' }}>إيقاف</Text>
                     </TouchableOpacity>
