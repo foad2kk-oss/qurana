@@ -920,11 +920,11 @@ export default function MemorizerScreen({ navigation }) {
             {/* Bottom Control Panel */}
             <View style={styles.revealModalControls}>
               {revealAllDone ? (
-                <View style={{ alignItems: 'center', gap: 10 }}>
-                  <Text style={{ color: '#4ade80', fontWeight: 'bold', fontSize: 16 }}>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ color: '#4ade80', fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>
                     🎉 شاهدت الآيات كاملة!
                   </Text>
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flexDirection: 'row' }}>
                     <TouchableOpacity
                       onPress={() => {
                         revealAyahsRef.current = displayAyahs;
@@ -1002,7 +1002,7 @@ export default function MemorizerScreen({ navigation }) {
                   </View>
                 </View>
               ) : (
-                <View style={{ alignItems: 'center', gap: 12 }}>
+                <View style={{ alignItems: 'center' }}>
                   {/* زر الشيخ */}
                   <TouchableOpacity
                     onPress={() => {
@@ -1014,18 +1014,20 @@ export default function MemorizerScreen({ navigation }) {
                       setRevealAllDone(false);
                       setIsSheikhReveal(true);
                       prevPlayingAyahRef.current = null;
-                      // شغّل الشيخ
                       const baseNum = isSeqMode ? ayahRange.start + seqOffset : ayahRange.start;
                       playGroup(currentSurahObj.id, baseNum, baseNum + displayAyahs.length - 1);
                     }}
-                    style={[styles.revealBigBtn, { backgroundColor: '#1e40af', marginBottom: 4 }]}
+                    style={[styles.revealBigBtn, { backgroundColor: '#1e40af', marginBottom: 14 }]}
                   >
                     <MaterialCommunityIcons name="account-voice" size={24} color="#fff" />
                     <Text style={styles.revealBigBtnText}>استمع مع الشيخ</Text>
                   </TouchableOpacity>
 
                   {/* زر التسميع الصوتي */}
-                  <TouchableOpacity onPress={() => { setIsSheikhReveal(false); startRevealListening(displayAyahs); }} style={styles.revealBigBtn}>
+                  <TouchableOpacity
+                    onPress={() => { setIsSheikhReveal(false); startRevealListening(displayAyahs); }}
+                    style={styles.revealBigBtn}
+                  >
                     <MaterialCommunityIcons name="microphone" size={24} color="#fff" />
                     <Text style={styles.revealBigBtnText}>سمّع بصوتك</Text>
                   </TouchableOpacity>
