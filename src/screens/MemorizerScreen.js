@@ -352,7 +352,7 @@ export default function MemorizerScreen({ navigation }) {
       let recitationReport;
 
       // In sequential mode evaluate only the current single ayah
-      const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 7);
+      const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 19);
       const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, clampedEnd);
       const targetAyahs = isSeqMode ? [rangeAyahs[seqOffset]].filter(Boolean) : rangeAyahs;
       const groupWords  = targetAyahs.flatMap(a => a.words || []);
@@ -370,10 +370,10 @@ export default function MemorizerScreen({ navigation }) {
 
       setEvaluationResult(recitationReport);
 
-      // 🔔 Beep when there are errors
+      // 🔔 Beep when there are errors — only in recite tab (not while sheikh plays)
       const hasErrors = recitationReport.score < 100 ||
         (recitationReport.tajweedErrors && recitationReport.tajweedErrors.length > 0);
-      if (hasErrors) playBeep();
+      if (hasErrors && activeTab === 'recite') playBeep();
 
       // Save to history
       addHistoryLog(currentSurahObj.id, refAyah, recitationReport.score, recitationReport.feedback);
@@ -399,7 +399,7 @@ export default function MemorizerScreen({ navigation }) {
 
   // Advance to next ayah in sequential mode
   const handleSeqNext = () => {
-    const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 7);
+    const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 19);
     const total = clampedEnd - ayahRange.start + 1;
     setEvaluationResult(null);
     if (seqOffset + 1 < total) {
@@ -423,7 +423,7 @@ export default function MemorizerScreen({ navigation }) {
 
   const currentPlayingAyahObj = activeAyahs[(currentAyah || 1) - 1] || activeAyahs[0];
   // All ayahs in the selected range (max 8) to display in the board
-  const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 7);
+  const clampedEnd = Math.min(ayahRange.end, ayahRange.start + 19);
   const rangeAyahs = activeAyahs.slice(ayahRange.start - 1, clampedEnd);
   // In sequential mode show only the current ayah
   const displayAyahs = isSeqMode ? rangeAyahs.slice(seqOffset, seqOffset + 1) : rangeAyahs;
@@ -1485,7 +1485,7 @@ export default function MemorizerScreen({ navigation }) {
             <View style={[styles.rangeHintBox, { backgroundColor: COLORS.secondary + '18', borderColor: COLORS.secondary + '40' }]}>
               <MaterialCommunityIcons name="information-outline" size={14} color={COLORS.secondary} />
               <Text style={[styles.rangeHintText, { color: COLORS.secondary }]}>
-                الحد الأقصى للعرض والتسميع: 8 آيات
+                الحد الأقصى للعرض والتسميع: 20 آية
               </Text>
             </View>
 
@@ -1498,7 +1498,7 @@ export default function MemorizerScreen({ navigation }) {
                     const val = i + 1;
                     // Must be >= start and within 8-ayah window
                     if (val < ayahRange.start) return null;
-                    if (val > ayahRange.start + 7) return null;
+                    if (val > ayahRange.start + 19) return null; // max 20 ayahs
                     return (
                       <TouchableOpacity
                         key={i}
@@ -1523,8 +1523,8 @@ export default function MemorizerScreen({ navigation }) {
                         key={i}
                         style={[styles.rangeValItem, val === ayahRange.start && { backgroundColor: COLORS.primary + '20' }]}
                         onPress={() => {
-                          // Clamp end to start+7 when start changes
-                          const newEnd = Math.min(Math.max(val, ayahRange.end), val + 7);
+                          // Clamp end to start+19 when start changes
+                          const newEnd = Math.min(Math.max(val, ayahRange.end), val + 19);
                           setAyahRange({ start: val, end: newEnd });
                         }}
                       >
