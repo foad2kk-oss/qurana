@@ -177,7 +177,10 @@ export default function MemorizerScreen({ navigation }) {
     if (idx >= ayahs.length) return;
     setLastHeard(text.trim());
     const ratio = scoreAyah(text, ayahs[idx]?.words || []);
-    advanceReveal(ratio >= 0.35); // 35% من الكلمات المنطوقة تطابق = صحيح
+    // صافرة فقط إذا كان الخطأ واضحاً جداً (أقل من 20%)
+    if (ratio < 0.20 && text.trim().length > 3) playBeep();
+    // الآية تنكشف تلقائياً دائماً بعد أي كلام
+    advanceReveal(true);
   }
 
   function startRevealSession() {
@@ -187,18 +190,25 @@ export default function MemorizerScreen({ navigation }) {
     r.lang = 'ar-SA'; r.continuous = false; r.interimResults = true;
     let finalText = '';
 
+    let processed = false;
     r.onresult = e => {
       let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
-        else interim = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          finalText += e.results[i][0].transcript + ' ';
+          // انكشف فوراً عند النتيجة النهائية بدون انتظار onend
+          if (!processed) { processed = true; processRevealSpeech(finalText); }
+        } else {
+          interim = e.results[i][0].transcript;
+        }
       }
       if (interim) setLastHeard(interim);
     };
     r.onend = () => {
       revealRecogRef.current = null;
-      if (finalText.trim()) processRevealSpeech(finalText);
-      if (isRevealListenRef.current) setTimeout(startRevealSession, 200);
+      // إذا لم تُعالج (لم يأتِ finalText) استخدم ما سُمع مؤقتاً
+      if (!processed && finalText.trim()) { processed = true; processRevealSpeech(finalText); }
+      if (isRevealListenRef.current) setTimeout(startRevealSession, 150);
     };
     r.onerror = ev => {
       if (ev.error === 'no-speech') { if (isRevealListenRef.current) setTimeout(startRevealSession, 300); }
