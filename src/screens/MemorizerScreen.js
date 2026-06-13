@@ -180,13 +180,23 @@ export default function MemorizerScreen({ navigation }) {
     if (idx >= ayahs.length) return;
     setLastHeard(text.trim());
 
-    const spoken = normalizeAr(text).split(/\s+/).filter(w => w.length >= 2);
-    const target = (ayahs[idx]?.words || []).map(w => normalizeAr(w.text)).filter(w => w.length >= 2);
-    const anyMatch = spoken.length > 0 && spoken.some(sw => target.some(tw =>
+    const spokenNorm = normalizeAr(text);
+    const spoken = spokenNorm.split(/\s+/).filter(w => w.length >= 2);
+    const ayahObj = ayahs[idx];
+    const target = (ayahObj?.words || []).map(w => normalizeAr(w.text)).filter(w => w.length >= 2);
+
+    // مطابقة بالكلمات: أي كلمة من المسموع موجودة في الآية
+    const wordMatch = spoken.length > 0 && spoken.some(sw => target.some(tw =>
       tw === sw || tw.startsWith(sw) || sw.startsWith(tw) || tw.includes(sw)
     ));
 
-    if (anyMatch) {
+    // مطابقة بالنص الكامل: النص المسموع يتقاطع مع نص الآية
+    const ayahFullNorm = normalizeAr(ayahObj?.text || '');
+    const textMatch = ayahFullNorm.length > 0 && spoken.some(sw => ayahFullNorm.includes(sw));
+
+    const isCorrect = wordMatch || textMatch;
+
+    if (isCorrect) {
       // قراءة صحيحة → أظهر الآية بالأخضر وانتقل للتالية
       setCurrentAyahError(false);
       advanceReveal(true);
@@ -231,7 +241,11 @@ export default function MemorizerScreen({ navigation }) {
       }
     };
     revealRecogRef.current = r;
-    try { r.start(); } catch (_) {}
+    try { r.start(); } catch (_) {
+      // r.start() فشل (Chrome يحجب إعادة التشغيل الفورية) — أعد المحاولة بعد 300ms
+      revealRecogRef.current = null;
+      if (isRevealListenRef.current) setTimeout(startRevealSession, 300);
+    }
   }
 
   function startRevealListening(ayahsList) {
