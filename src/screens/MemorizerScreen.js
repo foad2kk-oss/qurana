@@ -115,11 +115,13 @@ export default function MemorizerScreen({ navigation }) {
   const [isRevealListening,  setIsRevealListening]  = useState(false);
   const [revealAllDone,      setRevealAllDone]       = useState(false);
   const [lastHeard,          setLastHeard]           = useState('');
+  const [isSheikhReveal,     setIsSheikhReveal]     = useState(false); // وضع الشيخ
   const revealRecogRef       = useRef(null);
   const isRevealListenRef    = useRef(false);
   const currentRevealIdxRef  = useRef(0);
   const revealAyahsRef       = useRef([]);
   const revealScrollRef      = useRef(null);
+  const prevPlayingAyahRef   = useRef(null);
 
   const normalizeAr = (s = '') =>
     s.replace(/[ؐ-ًؚ-ٰٟۖ-ۭ]/g, '')
@@ -242,6 +244,42 @@ export default function MemorizerScreen({ navigation }) {
   // Cleanup reveal on unmount / surah change
   useEffect(() => () => stopRevealListening(), []);
   useEffect(() => { resetRevealMode(); }, [selectedSurahIndex, ayahRange.start, ayahRange.end]);
+
+  // ── Sheikh reveal: auto-reveal ayah when sheikh moves to next ──
+  useEffect(() => {
+    if (!isRevealMode || !isSheikhReveal || !currentAyah) return;
+    const prev = prevPlayingAyahRef.current;
+    prevPlayingAyahRef.current = currentAyah;
+    if (prev === null || prev === currentAyah) return; // لم تتغير الآية بعد
+
+    // الآية السابقة انتهت → اكشفها
+    const ayahs = revealAyahsRef.current;
+    const baseNum = isSeqMode ? ayahRange.start + seqOffset : ayahRange.start;
+    const finishedIdx = prev - baseNum; // index في displayAyahs
+    if (finishedIdx >= 0 && finishedIdx < ayahs.length) {
+      setRevealedAyahs(p => new Set([...p, finishedIdx]));
+      const nextIdx = finishedIdx + 1;
+      currentRevealIdxRef.current = nextIdx;
+      setCurrentRevealIdx(nextIdx);
+      if (nextIdx >= ayahs.length) setRevealAllDone(true);
+    }
+  }, [currentAyah, isRevealMode, isSheikhReveal]);
+
+  // ── Sheikh reveal: عندما يتوقف الشيخ اكشف الآية الأخيرة ──
+  useEffect(() => {
+    if (!isRevealMode || !isSheikhReveal || isPlaying) {
+      if (!isPlaying && isSheikhReveal && isRevealMode && prevPlayingAyahRef.current !== null) {
+        // الشيخ توقف — اكشف الآية الأخيرة إذا لم تُكشف
+        const ayahs = revealAyahsRef.current;
+        const baseNum = isSeqMode ? ayahRange.start + seqOffset : ayahRange.start;
+        const lastIdx = (prevPlayingAyahRef.current || ayahRange.start) - baseNum;
+        if (lastIdx >= 0 && lastIdx < ayahs.length && !revealedAyahs.has(lastIdx)) {
+          setRevealedAyahs(p => new Set([...p, lastIdx]));
+          setRevealAllDone(true);
+        }
+      }
+    }
+  }, [isPlaying, isRevealMode, isSheikhReveal]);
 
   // Waveform animation ref
   const waveAnims = useRef(Array(8).fill(0).map(() => new Animated.Value(4))).current;
@@ -882,13 +920,56 @@ export default function MemorizerScreen({ navigation }) {
             {/* Bottom Control Panel */}
             <View style={styles.revealModalControls}>
               {revealAllDone ? (
-                <View style={{ alignItems: 'center' }}>
-                  <Text style={{ color: errorAyahs.size === 0 ? '#4ade80' : '#f87171', fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>
-                    {errorAyahs.size === 0 ? '🎉 ممتاز! جميع الآيات صحيحة' : `انتهى · ${errorAyahs.size} آية بها خطأ`}
+                <View style={{ alignItems: 'center', gap: 10 }}>
+                  <Text style={{ color: '#4ade80', fontWeight: 'bold', fontSize: 16 }}>
+                    🎉 شاهدت الآيات كاملة!
                   </Text>
-                  <TouchableOpacity onPress={() => startRevealListening(displayAyahs)} style={styles.revealBigBtn}>
-                    <MaterialCommunityIcons name="refresh" size={22} color="#fff" />
-                    <Text style={styles.revealBigBtnText}>إعادة التسميع</Text>
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        revealAyahsRef.current = displayAyahs;
+                        currentRevealIdxRef.current = 0;
+                        setCurrentRevealIdx(0);
+                        setRevealedAyahs(new Set());
+                        setErrorAyahs(new Set());
+                        setRevealAllDone(false);
+                        setIsSheikhReveal(false);
+                        setLastHeard('');
+                        startRevealListening(displayAyahs);
+                      }}
+                      style={[styles.revealBigBtn, { paddingHorizontal: 20 }]}
+                    >
+                      <MaterialCommunityIcons name="microphone" size={20} color="#fff" />
+                      <Text style={styles.revealBigBtnText}>سمّع الآن</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        revealAyahsRef.current = displayAyahs;
+                        currentRevealIdxRef.current = 0;
+                        setCurrentRevealIdx(0);
+                        setRevealedAyahs(new Set());
+                        setErrorAyahs(new Set());
+                        setRevealAllDone(false);
+                        setIsSheikhReveal(true);
+                        prevPlayingAyahRef.current = null;
+                        const baseNum = isSeqMode ? ayahRange.start + seqOffset : ayahRange.start;
+                        playGroup(currentSurahObj.id, baseNum, baseNum + displayAyahs.length - 1);
+                      }}
+                      style={[styles.revealBigBtn, { backgroundColor: '#1e40af', paddingHorizontal: 20 }]}
+                    >
+                      <MaterialCommunityIcons name="refresh" size={20} color="#fff" />
+                      <Text style={styles.revealBigBtnText}>أعد الشيخ</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : isSheikhReveal && isPlaying ? (
+                <View style={{ alignItems: 'center', gap: 8 }}>
+                  <MaterialCommunityIcons name="account-voice" size={32} color="#60a5fa" />
+                  <Text style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: 14 }}>
+                    الشيخ يقرأ الآية {(isSeqMode ? ayahRange.start + seqOffset : ayahRange.start) + currentRevealIdx}…
+                  </Text>
+                  <TouchableOpacity onPress={() => { pauseSound(); setIsSheikhReveal(false); }} style={[styles.revealSmallBtn, { borderColor: '#f87171' }]}>
+                    <Text style={{ color: '#f87171' }}>إيقاف الشيخ</Text>
                   </TouchableOpacity>
                 </View>
               ) : isRevealListening ? (
@@ -921,10 +1002,34 @@ export default function MemorizerScreen({ navigation }) {
                   </View>
                 </View>
               ) : (
-                <TouchableOpacity onPress={() => startRevealListening(displayAyahs)} style={styles.revealBigBtn}>
-                  <MaterialCommunityIcons name="microphone" size={24} color="#fff" />
-                  <Text style={styles.revealBigBtnText}>ابدأ التسميع</Text>
-                </TouchableOpacity>
+                <View style={{ alignItems: 'center', gap: 12 }}>
+                  {/* زر الشيخ */}
+                  <TouchableOpacity
+                    onPress={() => {
+                      revealAyahsRef.current = displayAyahs;
+                      currentRevealIdxRef.current = 0;
+                      setCurrentRevealIdx(0);
+                      setRevealedAyahs(new Set());
+                      setErrorAyahs(new Set());
+                      setRevealAllDone(false);
+                      setIsSheikhReveal(true);
+                      prevPlayingAyahRef.current = null;
+                      // شغّل الشيخ
+                      const baseNum = isSeqMode ? ayahRange.start + seqOffset : ayahRange.start;
+                      playGroup(currentSurahObj.id, baseNum, baseNum + displayAyahs.length - 1);
+                    }}
+                    style={[styles.revealBigBtn, { backgroundColor: '#1e40af', marginBottom: 4 }]}
+                  >
+                    <MaterialCommunityIcons name="account-voice" size={24} color="#fff" />
+                    <Text style={styles.revealBigBtnText}>استمع مع الشيخ</Text>
+                  </TouchableOpacity>
+
+                  {/* زر التسميع الصوتي */}
+                  <TouchableOpacity onPress={() => { setIsSheikhReveal(false); startRevealListening(displayAyahs); }} style={styles.revealBigBtn}>
+                    <MaterialCommunityIcons name="microphone" size={24} color="#fff" />
+                    <Text style={styles.revealBigBtnText}>سمّع بصوتك</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           </View>
